@@ -91,9 +91,11 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
           <div className="mt-5 grid gap-4 sm:grid-cols-3">
             <div>
               <p className="font-sans text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
-                Invite code
+                Invite link
               </p>
-              <p className="mt-2 text-xl text-white">{league.inviteCode}</p>
+              <p className="mt-2 text-xl text-white">
+                https://wc-2026-fantasty.vercel.app{league.inviteLink}
+              </p>
             </div>
             <div>
               <p className="font-sans text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
