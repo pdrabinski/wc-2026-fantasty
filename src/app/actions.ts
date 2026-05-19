@@ -30,10 +30,9 @@ export async function createLeagueAction(formData: FormData) {
     redirect(buildErrorRedirect("/dashboard", "League name is required."));
   }
 
+  let leagueId = "";
   try {
-    const leagueId = await createLeagueForUser(user, { name, maxMembers });
-    revalidatePath("/dashboard");
-    redirect(`/leagues/${leagueId}`);
+    leagueId = await createLeagueForUser(user, { name, maxMembers });
   } catch (error) {
     redirect(
       buildErrorRedirect(
@@ -42,6 +41,9 @@ export async function createLeagueAction(formData: FormData) {
       ),
     );
   }
+
+  revalidatePath("/dashboard");
+  redirect(`/leagues/${leagueId}`);
 }
 
 export async function joinLeagueAction(formData: FormData) {
@@ -55,10 +57,9 @@ export async function joinLeagueAction(formData: FormData) {
     redirect(buildErrorRedirect("/dashboard", "Invite code is required."));
   }
 
+  let leagueId = "";
   try {
-    const leagueId = await joinLeagueForUser(user, inviteCode);
-    revalidatePath("/dashboard");
-    redirect(`/leagues/${leagueId}`);
+    leagueId = await joinLeagueForUser(user, inviteCode);
   } catch (error) {
     redirect(
       buildErrorRedirect(
@@ -67,6 +68,9 @@ export async function joinLeagueAction(formData: FormData) {
       ),
     );
   }
+
+  revalidatePath("/dashboard");
+  redirect(`/leagues/${leagueId}`);
 }
 
 export async function acceptInviteAction(formData: FormData) {
@@ -77,10 +81,9 @@ export async function acceptInviteAction(formData: FormData) {
     redirect(buildErrorRedirect(`/join/${inviteCode}`, "Sign in before joining a league."));
   }
 
+  let leagueId = "";
   try {
-    const leagueId = await joinLeagueForUser(user, inviteCode);
-    revalidatePath("/dashboard");
-    redirect(`/leagues/${leagueId}`);
+    leagueId = await joinLeagueForUser(user, inviteCode);
   } catch (error) {
     redirect(
       buildErrorRedirect(
@@ -89,6 +92,9 @@ export async function acceptInviteAction(formData: FormData) {
       ),
     );
   }
+
+  revalidatePath("/dashboard");
+  redirect(`/leagues/${leagueId}`);
 }
 
 export async function startDraftAction(formData: FormData) {
@@ -100,9 +106,6 @@ export async function startDraftAction(formData: FormData) {
   const leagueId = String(formData.get("leagueId") || "");
   try {
     await startDraftForLeague(user, leagueId);
-    revalidatePath(`/leagues/${leagueId}`);
-    revalidatePath(`/leagues/${leagueId}/draft`);
-    redirect(`/leagues/${leagueId}/draft`);
   } catch (error) {
     redirect(
       buildErrorRedirect(
@@ -111,6 +114,10 @@ export async function startDraftAction(formData: FormData) {
       ),
     );
   }
+
+  revalidatePath(`/leagues/${leagueId}`);
+  revalidatePath(`/leagues/${leagueId}/draft`);
+  redirect(`/leagues/${leagueId}/draft`);
 }
 
 export async function submitDraftPickAction(formData: FormData) {
@@ -125,9 +132,6 @@ export async function submitDraftPickAction(formData: FormData) {
 
   try {
     await submitDraftPickForLeague(user, leagueId, { pickType, targetId });
-    revalidatePath(`/leagues/${leagueId}`);
-    revalidatePath(`/leagues/${leagueId}/draft`);
-    redirect(`/leagues/${leagueId}/draft`);
   } catch (error) {
     redirect(
       buildErrorRedirect(
@@ -136,6 +140,10 @@ export async function submitDraftPickAction(formData: FormData) {
       ),
     );
   }
+
+  revalidatePath(`/leagues/${leagueId}`);
+  revalidatePath(`/leagues/${leagueId}/draft`);
+  redirect(`/leagues/${leagueId}/draft`);
 }
 
 export async function syncTournamentMatchesAction(formData: FormData) {
@@ -148,8 +156,6 @@ export async function syncTournamentMatchesAction(formData: FormData) {
 
   try {
     await syncTournamentMatchesForLeague(user, leagueId);
-    revalidatePath(`/leagues/${leagueId}`);
-    redirect(`/leagues/${leagueId}`);
   } catch (error) {
     redirect(
       buildErrorRedirect(
@@ -158,4 +164,7 @@ export async function syncTournamentMatchesAction(formData: FormData) {
       ),
     );
   }
+
+  revalidatePath(`/leagues/${leagueId}`);
+  redirect(`/leagues/${leagueId}`);
 }

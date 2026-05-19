@@ -13,6 +13,9 @@ export default function MarketingHome() {
       <section className="mx-auto max-w-7xl px-5 pb-16 pt-8 sm:px-8 lg:px-10">
         <div className="max-w-4xl">
           <div>
+            <p className="font-sans text-[0.72rem] uppercase tracking-[0.32em] text-[var(--gold)]">
+              World Cup 2026
+            </p>
             <h1 className="mt-5 max-w-5xl font-sans text-[4rem] uppercase leading-[0.9] tracking-[0.03em] text-white sm:text-[5.5rem]">
               Draft five nations. Draft six stars. Crown two champions.
             </h1>
@@ -64,24 +67,16 @@ export default function MarketingHome() {
           </div>
         </div>
 
-        <section className="mt-14 grid gap-6 border-t border-[var(--line)] pt-6 lg:grid-cols-[0.95fr_1.05fr]">
-          <div>
-            <p className="font-sans text-[0.72rem] uppercase tracking-[0.3em] text-[var(--gold)]">
-              Rules
-            </p>
-            <p className="mt-3 text-base text-white">5 teams. 6 players. 11 rounds.</p>
-          </div>
-          <div>
-            <div className="flex flex-wrap gap-2">
-              {featuredTeams.map((team) => (
-                <span
-                  key={team.id}
-                  className="rounded-full border border-white/10 px-3 py-2 font-sans text-xs uppercase tracking-[0.16em] text-white"
-                >
-                  {team.countryCode} · {team.name}
-                </span>
-              ))}
-            </div>
+        <section className="mt-14 border-t border-[var(--line)] pt-6">
+          <div className="flex flex-wrap gap-2">
+            {featuredTeams.map((team) => (
+              <span
+                key={team.id}
+                className="rounded-full border border-white/10 px-3 py-2 font-sans text-xs uppercase tracking-[0.16em] text-white"
+              >
+                {team.countryCode} · {team.name}
+              </span>
+            ))}
           </div>
         </section>
       </section>

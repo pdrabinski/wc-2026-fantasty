@@ -96,20 +96,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                       className="mt-2 w-full rounded-[14px] border border-white/10 bg-black/25 px-4 py-3 text-sm text-white outline-none"
                     />
                   </label>
-                  <label className="mt-4 block text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
-                    Max members
-                    <select
-                      name="maxMembers"
-                      defaultValue="8"
-                      className="mt-2 w-full rounded-[14px] border border-white/10 bg-black/25 px-4 py-3 text-sm text-white outline-none"
-                    >
-                      {[4, 6, 8, 10, 12].map((size) => (
-                        <option key={size} value={size}>
-                          {size}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
+                  <input type="hidden" name="maxMembers" value="8" />
                   <button className="mt-5 rounded-full bg-[var(--gold)] px-5 py-3 font-sans text-sm uppercase tracking-[0.18em] text-[var(--ink)]">
                     Create league
                   </button>
