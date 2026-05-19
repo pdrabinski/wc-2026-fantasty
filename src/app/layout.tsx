@@ -8,7 +8,7 @@ const hasClerkEnv = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
 export const metadata: Metadata = {
   title: "World Cup Fantasy",
-  description: "A private fantasy World Cup league with team and player drafting.",
+  description: "A private fantasy World Cup league focused on team drafting.",
 };
 
 export default function RootLayout({

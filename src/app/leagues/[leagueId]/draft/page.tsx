@@ -4,8 +4,8 @@ import { notFound, redirect } from "next/navigation";
 
 import { startDraftAction, submitDraftPickAction } from "@/app/actions";
 import { getLeagueByIdForUser } from "@/lib/db";
-import { seedPlayers, seedTeams } from "@/lib/fantasy-data";
-import { getCurrentDraftState, validateDraftPick } from "@/lib/fantasy-engine";
+import { getFlagEmojiFromCode, seedTeams } from "@/lib/fantasy-data";
+import { getCurrentDraftState } from "@/lib/fantasy-engine";
 
 export const dynamic = "force-dynamic";
 
@@ -33,17 +33,11 @@ export default async function DraftPage({ params, searchParams }: DraftPageProps
   }
 
   const draft = getCurrentDraftState(league);
-  const highlightedTeam = seedTeams.find((team) => team.id === "team-morocco");
-  const highlightedPlayer = seedPlayers.find((player) => player.id === "player-musiala");
   const isCurrentManager = draft.currentManager.userId === league.currentUserId;
   const draftedTeamIds = new Set(
     league.picks.filter((pick) => pick.pickType === "team").map((pick) => pick.targetId),
   );
-  const draftedPlayerIds = new Set(
-    league.picks.filter((pick) => pick.pickType === "player").map((pick) => pick.targetId),
-  );
   const availableTeams = seedTeams.filter((team) => !draftedTeamIds.has(team.id));
-  const availablePlayers = seedPlayers.filter((player) => !draftedPlayerIds.has(player.id));
 
   return (
     <main className="mx-auto max-w-7xl px-5 pb-16 pt-8 sm:px-8 lg:px-10">
@@ -99,25 +93,6 @@ export default async function DraftPage({ params, searchParams }: DraftPageProps
                 <p className="mt-1 text-3xl">{draft.pickNumber}</p>
               </div>
             </div>
-            <div className="mt-5 border-t border-white/10 pt-4">
-              <p className="font-sans text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
-                Suggested validation
-              </p>
-              <p className="mt-2 text-sm leading-7">
-                {highlightedTeam && highlightedPlayer
-                  ? [
-                      validateDraftPick(league, draft.currentManager.userId, {
-                        pickType: "team",
-                        targetId: highlightedTeam.id,
-                      }).message,
-                      validateDraftPick(league, draft.currentManager.userId, {
-                        pickType: "player",
-                        targetId: highlightedPlayer.id,
-                      }).message,
-                    ].join(" ")
-                  : "Seed data unavailable."}
-              </p>
-            </div>
           </article>
 
           <article className="border-t border-[var(--line)] pt-6">
@@ -152,25 +127,30 @@ export default async function DraftPage({ params, searchParams }: DraftPageProps
                 <h2 className="mt-2 font-sans text-3xl uppercase tracking-[0.03em] text-white">Teams</h2>
               </div>
               <span className="rounded-full border border-white/10 px-4 py-2 font-sans text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
-                1 Tier 1, 1 Tier 2, 3 Tier 3+
+                5 team draft
               </span>
             </div>
 
-            <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            <div className="mt-5 space-y-3">
               {availableTeams.map((team) => (
-                <div key={team.id} className="border-t border-white/10 py-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <h3 className="font-sans text-xl uppercase tracking-[0.03em] text-white">
-                      {team.name}
-                    </h3>
-                    <span className="rounded-full bg-[var(--pitch)] px-3 py-1 font-sans text-[0.65rem] uppercase tracking-[0.18em] text-white">
-                      {team.tier}
-                    </span>
+                <div
+                  key={team.id}
+                  className="flex flex-wrap items-center justify-between gap-4 border-t border-white/10 py-4"
+                >
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <h3 className="font-sans text-xl uppercase tracking-[0.03em] text-white">
+                        {getFlagEmojiFromCode(team.countryCode)} {team.name}
+                      </h3>
+                      <span className="rounded-full bg-[var(--pitch)] px-3 py-1 font-sans text-[0.65rem] uppercase tracking-[0.18em] text-white">
+                        {team.tier}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-sm text-[var(--muted)]">
+                      {team.countryCode}{team.groupName !== "TBD" ? ` · Group ${team.groupName}` : ""}
+                    </p>
                   </div>
-                  <p className="mt-2 text-sm text-[var(--muted)]">
-                    {team.countryCode} · Group {team.groupName}
-                  </p>
-                  <form action={submitDraftPickAction} className="mt-4">
+                  <form action={submitDraftPickAction}>
                     <input type="hidden" name="leagueId" value={league.id} />
                     <input type="hidden" name="pickType" value="team" />
                     <input type="hidden" name="targetId" value={team.id} />
@@ -179,40 +159,6 @@ export default async function DraftPage({ params, searchParams }: DraftPageProps
                       className="rounded-full border border-white/15 px-4 py-2 font-sans text-[0.68rem] uppercase tracking-[0.18em] text-white disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Draft team
-                    </button>
-                  </form>
-                </div>
-              ))}
-            </div>
-          </article>
-
-          <article className="border-t border-[var(--line)] pt-6">
-            <p className="font-sans text-xs uppercase tracking-[0.18em] text-[var(--gold)]">
-              Available Players
-            </p>
-            <div className="mt-4 grid gap-3 md:grid-cols-2">
-              {availablePlayers.map((player) => (
-                <div key={player.id} className="border-t border-white/10 py-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <h3 className="font-sans text-lg uppercase tracking-[0.03em] text-white">
-                      {player.name}
-                    </h3>
-                    <span className="rounded-full bg-[var(--gold)] px-3 py-1 font-sans text-[0.65rem] uppercase tracking-[0.18em] text-[var(--ink)]">
-                      {player.position}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-sm text-[var(--muted)]">
-                    {seedTeams.find((team) => team.id === player.teamId)?.name || "Seed squad"}
-                  </p>
-                  <form action={submitDraftPickAction} className="mt-4">
-                    <input type="hidden" name="leagueId" value={league.id} />
-                    <input type="hidden" name="pickType" value="player" />
-                    <input type="hidden" name="targetId" value={player.id} />
-                    <button
-                      disabled={!isCurrentManager}
-                      className="rounded-full border border-white/15 px-4 py-2 font-sans text-[0.68rem] uppercase tracking-[0.18em] text-white disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      Draft player
                     </button>
                   </form>
                 </div>
@@ -234,9 +180,6 @@ export default async function DraftPage({ params, searchParams }: DraftPageProps
                     Round {pick.round} · Pick {pick.pickNumber}
                   </span>
                   <span className="text-sm text-white">{pick.label}</span>
-                  <span className="text-xs uppercase tracking-[0.18em] text-[var(--gold)]">
-                    {pick.pickType}
-                  </span>
                 </div>
               ))}
             </div>

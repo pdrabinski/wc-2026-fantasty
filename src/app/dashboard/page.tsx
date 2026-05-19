@@ -41,7 +41,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       <div className="flex flex-wrap items-end justify-between gap-6 border-b border-[var(--line)] pb-6">
         <div>
           <p className="font-sans text-[0.72rem] uppercase tracking-[0.3em] text-[var(--gold)]">
-            Dashboard
+            Admin
           </p>
           <h1 className="mt-3 font-sans text-5xl uppercase tracking-[0.04em] text-white">
             Your leagues
@@ -83,46 +83,6 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           <section className="mt-8">
             <article className="border-t border-[var(--line)] pt-6">
               <p className="font-sans text-xs uppercase tracking-[0.18em] text-[var(--gold)]">
-                League Controls
-              </p>
-              <div className="mt-5 grid gap-5 lg:grid-cols-2">
-                <form action={createLeagueAction} className="border-t border-white/10 pt-4">
-                  <h2 className="font-sans text-2xl uppercase tracking-[0.03em] text-white">Create league</h2>
-                  <label className="mt-4 block text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
-                    League name
-                    <input
-                      name="name"
-                      defaultValue="World Cup Night Crew"
-                      className="mt-2 w-full rounded-[14px] border border-white/10 bg-black/25 px-4 py-3 text-sm text-white outline-none"
-                    />
-                  </label>
-                  <input type="hidden" name="maxMembers" value="8" />
-                  <button className="mt-5 rounded-full bg-[var(--gold)] px-5 py-3 font-sans text-sm uppercase tracking-[0.18em] text-[var(--ink)]">
-                    Create league
-                  </button>
-                </form>
-
-                <form action={joinLeagueAction} className="border-t border-white/10 pt-4">
-                  <h2 className="font-sans text-2xl uppercase tracking-[0.03em] text-white">Join with invite</h2>
-                  <label className="mt-4 block text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
-                    Invite code
-                    <input
-                      name="inviteCode"
-                      placeholder="ABC123"
-                      className="mt-2 w-full rounded-[14px] border border-white/10 bg-black/25 px-4 py-3 text-sm uppercase tracking-[0.16em] text-white outline-none"
-                    />
-                  </label>
-                  <button className="mt-5 rounded-full border border-[var(--line-strong)] px-5 py-3 font-sans text-sm uppercase tracking-[0.18em] text-white">
-                    Join league
-                  </button>
-                </form>
-              </div>
-            </article>
-          </section>
-
-          <section className="mt-8">
-            <article className="border-t border-[var(--line)] pt-6">
-              <p className="font-sans text-xs uppercase tracking-[0.18em] text-[var(--gold)]">
                 Your Leagues
               </p>
               <div className="mt-4 space-y-4">
@@ -147,12 +107,59 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                       </div>
                       <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-[var(--muted)]">
                         <span>{league.memberCount} / {league.maxMembers} members</span>
-                        <span>Invite: {league.inviteCode}</span>
-                        <span>Link: {league.inviteLink}</span>
+                        <span>Code: {league.inviteCode}</span>
                       </div>
                     </Link>
                   ))
                 )}
+              </div>
+            </article>
+          </section>
+
+          <section className="mt-8">
+            <article className="border-t border-[var(--line)] pt-6">
+              <p className="font-sans text-xs uppercase tracking-[0.18em] text-[var(--gold)]">
+                League Controls
+              </p>
+              <div className="mt-5 space-y-3">
+                <details className="border-t border-white/10 py-4">
+                  <summary className="cursor-pointer list-none font-sans text-2xl uppercase tracking-[0.03em] text-white">
+                    Create league
+                  </summary>
+                  <form action={createLeagueAction} className="mt-4">
+                    <label className="block text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
+                      League name
+                      <input
+                        name="name"
+                        defaultValue="World Cup Night Crew"
+                        className="mt-2 w-full rounded-[14px] border border-white/10 bg-black/25 px-4 py-3 text-sm text-white outline-none"
+                      />
+                    </label>
+                    <input type="hidden" name="maxMembers" value="8" />
+                    <button className="mt-5 rounded-full bg-[var(--gold)] px-5 py-3 font-sans text-sm uppercase tracking-[0.18em] text-[var(--ink)]">
+                      Create league
+                    </button>
+                  </form>
+                </details>
+
+                <details className="border-t border-white/10 py-4">
+                  <summary className="cursor-pointer list-none font-sans text-2xl uppercase tracking-[0.03em] text-white">
+                    Join with invite
+                  </summary>
+                  <form action={joinLeagueAction} className="mt-4">
+                    <label className="block text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
+                      Invite code
+                      <input
+                        name="inviteCode"
+                        placeholder="ABC123"
+                        className="mt-2 w-full rounded-[14px] border border-white/10 bg-black/25 px-4 py-3 text-sm uppercase tracking-[0.16em] text-white outline-none"
+                      />
+                    </label>
+                    <button className="mt-5 rounded-full border border-[var(--line-strong)] px-5 py-3 font-sans text-sm uppercase tracking-[0.18em] text-white">
+                      Join league
+                    </button>
+                  </form>
+                </details>
               </div>
             </article>
           </section>

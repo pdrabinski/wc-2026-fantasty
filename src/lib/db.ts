@@ -369,7 +369,7 @@ async function ensureTournamentTeamsPersisted(teams: TournamentTeam[], matches: 
       id: resolvedId,
       name: team.name,
       country_code: team.code,
-      tier: matchedSeed?.tier || existingByCode?.tier || existingByName?.tier || "Tier 3",
+      tier: matchedSeed?.tier || existingByCode?.tier || existingByName?.tier || "Pot 3",
       group_name: matchedSeed?.groupName || existingByCode?.group_name || existingByName?.group_name || "TBD",
       flag_url: team.crestUrl || existingByCode?.flag_url || existingByName?.flag_url || null,
     };

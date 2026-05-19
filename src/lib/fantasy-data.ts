@@ -5,7 +5,7 @@ export type LeagueStatus =
   | "knockout_stage"
   | "completed";
 
-export type TeamTier = "Tier 1" | "Tier 2" | "Tier 3";
+export type TeamTier = "Pot 1" | "Pot 2" | "Pot 3";
 export type PlayerPosition = "GK" | "DEF" | "MID" | "FWD";
 export type DraftPickType = "team" | "player";
 export type ScorePhase = "group" | "knockout";
@@ -17,6 +17,64 @@ export type TeamSeed = {
   tier: TeamTier;
   groupName: string;
 };
+
+const countryCodeToIso2: Record<string, string> = {
+  ALG: "DZ",
+  ARG: "AR",
+  AUS: "AU",
+  AUT: "AT",
+  BEL: "BE",
+  BRA: "BR",
+  CAN: "CA",
+  CIV: "CI",
+  COL: "CO",
+  CRO: "HR",
+  ECU: "EC",
+  EGY: "EG",
+  ESP: "ES",
+  FRA: "FR",
+  GER: "DE",
+  IRN: "IR",
+  JPN: "JP",
+  KOR: "KR",
+  KSA: "SA",
+  MAR: "MA",
+  MEX: "MX",
+  NED: "NL",
+  NOR: "NO",
+  PAN: "PA",
+  PAR: "PY",
+  POR: "PT",
+  QAT: "QA",
+  RSA: "ZA",
+  SEN: "SN",
+  SUI: "CH",
+  TUN: "TN",
+  URU: "UY",
+  USA: "US",
+  UZB: "UZ",
+};
+
+const flagOverrides: Record<string, string> = {
+  ENG: "🏴",
+  SCO: "🏴",
+};
+
+export function getFlagEmojiFromCode(countryCode?: string) {
+  if (!countryCode) {
+    return "🏳️";
+  }
+
+  const normalized = countryCode.toUpperCase();
+  if (flagOverrides[normalized]) {
+    return flagOverrides[normalized];
+  }
+
+  const iso2 = countryCodeToIso2[normalized] || normalized.slice(0, 2);
+
+  return iso2
+    .replace(/./g, (char) => String.fromCodePoint(127397 + char.charCodeAt(0)));
+}
 
 export type PlayerSeed = {
   id: string;
@@ -68,22 +126,52 @@ export type FantasyLeague = {
   scores: Record<ScorePhase, LeagueScore[]>;
 };
 
-export const seedTeams: TeamSeed[] = [
-  { id: "team-france", name: "France", countryCode: "FRA", tier: "Tier 1", groupName: "A" },
-  { id: "team-brazil", name: "Brazil", countryCode: "BRA", tier: "Tier 1", groupName: "B" },
-  { id: "team-argentina", name: "Argentina", countryCode: "ARG", tier: "Tier 1", groupName: "C" },
-  { id: "team-england", name: "England", countryCode: "ENG", tier: "Tier 1", groupName: "D" },
-  { id: "team-spain", name: "Spain", countryCode: "ESP", tier: "Tier 1", groupName: "E" },
-  { id: "team-germany", name: "Germany", countryCode: "GER", tier: "Tier 1", groupName: "F" },
-  { id: "team-portugal", name: "Portugal", countryCode: "POR", tier: "Tier 2", groupName: "G" },
-  { id: "team-netherlands", name: "Netherlands", countryCode: "NED", tier: "Tier 2", groupName: "H" },
-  { id: "team-morocco", name: "Morocco", countryCode: "MAR", tier: "Tier 2", groupName: "E" },
-  { id: "team-usa", name: "United States", countryCode: "USA", tier: "Tier 3", groupName: "D" },
-  { id: "team-japan", name: "Japan", countryCode: "JPN", tier: "Tier 3", groupName: "F" },
-  { id: "team-senegal", name: "Senegal", countryCode: "SEN", tier: "Tier 3", groupName: "A" },
-  { id: "team-mexico", name: "Mexico", countryCode: "MEX", tier: "Tier 3", groupName: "B" },
-  { id: "team-switzerland", name: "Switzerland", countryCode: "SUI", tier: "Tier 3", groupName: "G" },
+const potSeeds: Array<{ id: string; name: string; countryCode: string; tier: TeamTier }> = [
+  { id: "team-spain", name: "Spain", countryCode: "ESP", tier: "Pot 1" },
+  { id: "team-argentina", name: "Argentina", countryCode: "ARG", tier: "Pot 1" },
+  { id: "team-france", name: "France", countryCode: "FRA", tier: "Pot 1" },
+  { id: "team-england", name: "England", countryCode: "ENG", tier: "Pot 1" },
+  { id: "team-brazil", name: "Brazil", countryCode: "BRA", tier: "Pot 1" },
+  { id: "team-portugal", name: "Portugal", countryCode: "POR", tier: "Pot 1" },
+  { id: "team-netherlands", name: "Netherlands", countryCode: "NED", tier: "Pot 1" },
+  { id: "team-belgium", name: "Belgium", countryCode: "BEL", tier: "Pot 1" },
+  { id: "team-germany", name: "Germany", countryCode: "GER", tier: "Pot 1" },
+  { id: "team-croatia", name: "Croatia", countryCode: "CRO", tier: "Pot 1" },
+  { id: "team-mexico", name: "Mexico", countryCode: "MEX", tier: "Pot 1" },
+  { id: "team-morocco", name: "Morocco", countryCode: "MAR", tier: "Pot 2" },
+  { id: "team-colombia", name: "Colombia", countryCode: "COL", tier: "Pot 2" },
+  { id: "team-uruguay", name: "Uruguay", countryCode: "URU", tier: "Pot 2" },
+  { id: "team-switzerland", name: "Switzerland", countryCode: "SUI", tier: "Pot 2" },
+  { id: "team-japan", name: "Japan", countryCode: "JPN", tier: "Pot 2" },
+  { id: "team-senegal", name: "Senegal", countryCode: "SEN", tier: "Pot 2" },
+  { id: "team-iran", name: "Iran", countryCode: "IRN", tier: "Pot 2" },
+  { id: "team-south-korea", name: "South Korea", countryCode: "KOR", tier: "Pot 2" },
+  { id: "team-ecuador", name: "Ecuador", countryCode: "ECU", tier: "Pot 2" },
+  { id: "team-austria", name: "Austria", countryCode: "AUT", tier: "Pot 2" },
+  { id: "team-australia", name: "Australia", countryCode: "AUS", tier: "Pot 2" },
+  { id: "team-usa", name: "United States", countryCode: "USA", tier: "Pot 2" },
+  { id: "team-canada", name: "Canada", countryCode: "CAN", tier: "Pot 2" },
+  { id: "team-norway", name: "Norway", countryCode: "NOR", tier: "Pot 3" },
+  { id: "team-panama", name: "Panama", countryCode: "PAN", tier: "Pot 3" },
+  { id: "team-egypt", name: "Egypt", countryCode: "EGY", tier: "Pot 3" },
+  { id: "team-algeria", name: "Algeria", countryCode: "ALG", tier: "Pot 3" },
+  { id: "team-scotland", name: "Scotland", countryCode: "SCO", tier: "Pot 3" },
+  { id: "team-paraguay", name: "Paraguay", countryCode: "PAR", tier: "Pot 3" },
+  { id: "team-tunisia", name: "Tunisia", countryCode: "TUN", tier: "Pot 3" },
+  { id: "team-ivory-coast", name: "Ivory Coast", countryCode: "CIV", tier: "Pot 3" },
+  { id: "team-uzbekistan", name: "Uzbekistan", countryCode: "UZB", tier: "Pot 3" },
+  { id: "team-qatar", name: "Qatar", countryCode: "QAT", tier: "Pot 3" },
+  { id: "team-saudi-arabia", name: "Saudi Arabia", countryCode: "KSA", tier: "Pot 3" },
+  { id: "team-south-africa", name: "South Africa", countryCode: "RSA", tier: "Pot 3" },
 ];
+
+export const seedTeams: TeamSeed[] = potSeeds.map((team) => ({
+  id: team.id,
+  name: team.name,
+  countryCode: team.countryCode,
+  tier: team.tier,
+  groupName: "TBD",
+}));
 
 export const seedPlayers: PlayerSeed[] = [
   { id: "player-mbappe", name: "Kylian Mbappe", teamId: "team-france", position: "FWD" },
@@ -140,7 +228,7 @@ export const sampleLeague: FantasyLeague = {
       roster: [
         { id: "r1", label: "France", rosterType: "team", sourceId: "team-france" },
         { id: "r2", label: "Morocco", rosterType: "team", sourceId: "team-morocco" },
-        { id: "r3", label: "Kylian Mbappe", rosterType: "player", sourceId: "player-mbappe" },
+        { id: "r3", label: "Mexico", rosterType: "team", sourceId: "team-mexico" },
       ],
     },
     {
@@ -150,7 +238,7 @@ export const sampleLeague: FantasyLeague = {
       roster: [
         { id: "r4", label: "Brazil", rosterType: "team", sourceId: "team-brazil" },
         { id: "r5", label: "Japan", rosterType: "team", sourceId: "team-japan" },
-        { id: "r6", label: "Vinicius Junior", rosterType: "player", sourceId: "player-vinicius" },
+        { id: "r6", label: "Portugal", rosterType: "team", sourceId: "team-portugal" },
       ],
     },
     {
@@ -160,7 +248,7 @@ export const sampleLeague: FantasyLeague = {
       roster: [
         { id: "r7", label: "Argentina", rosterType: "team", sourceId: "team-argentina" },
         { id: "r8", label: "United States", rosterType: "team", sourceId: "team-usa" },
-        { id: "r9", label: "Lionel Messi", rosterType: "player", sourceId: "player-messi" },
+        { id: "r9", label: "Canada", rosterType: "team", sourceId: "team-canada" },
       ],
     },
     {
@@ -170,7 +258,7 @@ export const sampleLeague: FantasyLeague = {
       roster: [
         { id: "r10", label: "England", rosterType: "team", sourceId: "team-england" },
         { id: "r11", label: "Senegal", rosterType: "team", sourceId: "team-senegal" },
-        { id: "r12", label: "Jude Bellingham", rosterType: "player", sourceId: "player-bellingham" },
+        { id: "r12", label: "Germany", rosterType: "team", sourceId: "team-germany" },
       ],
     },
   ],
@@ -183,17 +271,17 @@ export const sampleLeague: FantasyLeague = {
     { id: "p6", round: 2, pickNumber: 6, userId: "user-maya", pickType: "team", targetId: "team-usa", label: "Maya drafted United States" },
     { id: "p7", round: 2, pickNumber: 7, userId: "user-luca", pickType: "team", targetId: "team-japan", label: "Luca drafted Japan" },
     { id: "p8", round: 2, pickNumber: 8, userId: "user-ava", pickType: "team", targetId: "team-morocco", label: "Ava drafted Morocco" },
-    { id: "p9", round: 3, pickNumber: 9, userId: "user-ava", pickType: "player", targetId: "player-mbappe", label: "Ava drafted Kylian Mbappe" },
-    { id: "p10", round: 3, pickNumber: 10, userId: "user-luca", pickType: "player", targetId: "player-vinicius", label: "Luca drafted Vinicius Junior" },
-    { id: "p11", round: 3, pickNumber: 11, userId: "user-maya", pickType: "player", targetId: "player-messi", label: "Maya drafted Lionel Messi" },
-    { id: "p12", round: 3, pickNumber: 12, userId: "user-noah", pickType: "player", targetId: "player-bellingham", label: "Noah drafted Jude Bellingham" },
+    { id: "p9", round: 3, pickNumber: 9, userId: "user-ava", pickType: "team", targetId: "team-mexico", label: "Ava drafted Mexico" },
+    { id: "p10", round: 3, pickNumber: 10, userId: "user-luca", pickType: "team", targetId: "team-portugal", label: "Luca drafted Portugal" },
+    { id: "p11", round: 3, pickNumber: 11, userId: "user-maya", pickType: "team", targetId: "team-canada", label: "Maya drafted Canada" },
+    { id: "p12", round: 3, pickNumber: 12, userId: "user-noah", pickType: "team", targetId: "team-germany", label: "Noah drafted Germany" },
   ],
   scores: {
     group: [
-      { userId: "user-noah", teamPoints: 11, playerPoints: 8, totalPoints: 19 },
-      { userId: "user-ava", teamPoints: 10, playerPoints: 7, totalPoints: 17 },
-      { userId: "user-luca", teamPoints: 8, playerPoints: 7, totalPoints: 15 },
-      { userId: "user-maya", teamPoints: 7, playerPoints: 5, totalPoints: 12 },
+      { userId: "user-noah", teamPoints: 19, playerPoints: 0, totalPoints: 19 },
+      { userId: "user-ava", teamPoints: 17, playerPoints: 0, totalPoints: 17 },
+      { userId: "user-luca", teamPoints: 15, playerPoints: 0, totalPoints: 15 },
+      { userId: "user-maya", teamPoints: 12, playerPoints: 0, totalPoints: 12 },
     ],
     knockout: [
       { userId: "user-ava", teamPoints: 0, playerPoints: 0, totalPoints: 0 },

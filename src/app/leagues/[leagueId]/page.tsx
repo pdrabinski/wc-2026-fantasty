@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 
 import { startDraftAction, syncTournamentMatchesAction } from "@/app/actions";
 import { getLeagueByIdForUser, getStoredMatches } from "@/lib/db";
+import { getFlagEmojiFromCode, seedTeams } from "@/lib/fantasy-data";
 import { getTournamentDataSnapshot } from "@/lib/world-cup-data";
 
 export const dynamic = "force-dynamic";
@@ -36,6 +37,7 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
   }
 
   const canStartDraft = league.currentUserId === league.commissionerUserId;
+  const teamCodeById = new Map(seedTeams.map((team) => [team.id, team.countryCode]));
 
   return (
     <main className="mx-auto max-w-7xl px-5 pb-16 pt-8 sm:px-8 lg:px-10">
@@ -70,9 +72,9 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
           <div className="mt-5 grid gap-4 sm:grid-cols-3">
             <div>
               <p className="font-sans text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
-                Invite
+                Invite code
               </p>
-              <p className="mt-2 text-xl text-white">{league.inviteLink}</p>
+              <p className="mt-2 text-xl text-white">{league.inviteCode}</p>
             </div>
             <div>
               <p className="font-sans text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
@@ -106,9 +108,7 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
               <thead className="font-sans uppercase tracking-[0.18em] text-[var(--muted)]">
                 <tr>
                   <th className="px-4 py-3">Manager</th>
-                  <th className="px-4 py-3">Team Pts</th>
-                  <th className="px-4 py-3">Player Pts</th>
-                  <th className="px-4 py-3">Total</th>
+                  <th className="px-4 py-3">Points</th>
                 </tr>
               </thead>
               <tbody>
@@ -117,8 +117,6 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
                   return (
                     <tr key={score.userId} className="border-t border-white/10">
                       <td className="px-4 py-4">{member?.displayName}</td>
-                      <td className="px-4 py-4">{score.teamPoints}</td>
-                      <td className="px-4 py-4">{score.playerPoints}</td>
                       <td className="px-4 py-4 font-semibold">{score.totalPoints}</td>
                     </tr>
                   );
@@ -176,7 +174,7 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
                   <div className="mt-3 flex items-center justify-between gap-4">
                     <div>
                       <p className="font-sans text-xl uppercase tracking-[0.03em] text-white">
-                        {match.homeTeam}
+                        {getFlagEmojiFromCode(match.homeCode)} {match.homeTeam}
                       </p>
                       <p className="mt-1 text-sm text-[var(--muted)]">{match.homeCode || "HOME"}</p>
                     </div>
@@ -190,7 +188,7 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
                     </div>
                     <div className="text-right">
                       <p className="font-sans text-xl uppercase tracking-[0.03em] text-white">
-                        {match.awayTeam}
+                        {getFlagEmojiFromCode(match.awayCode)} {match.awayTeam}
                       </p>
                       <p className="mt-1 text-sm text-[var(--muted)]">{match.awayCode || "AWAY"}</p>
                     </div>
@@ -224,7 +222,7 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
                           key={item.id}
                           className="rounded-full bg-white/8 px-3 py-2 font-sans text-[0.7rem] uppercase tracking-[0.16em] text-white"
                         >
-                          {item.label}
+                          {getFlagEmojiFromCode(teamCodeById.get(item.sourceId))} {item.label}
                         </span>
                       ))
                     )}
@@ -259,7 +257,6 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
               </form>
               {[
                 "Add match result",
-                "Add player stats",
                 "Recalculate scores",
                 "Lock group stage"
               ].map((label) => (
@@ -314,7 +311,7 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
                     <div className="mt-3 flex items-center justify-between gap-4">
                       <div>
                         <p className="font-sans text-xl uppercase tracking-[0.03em] text-white">
-                          {match.homeTeam}
+                          {getFlagEmojiFromCode(match.homeCode)} {match.homeTeam}
                         </p>
                         <p className="mt-1 text-sm text-[var(--muted)]">{match.homeCode || "HOME"}</p>
                       </div>
@@ -328,7 +325,7 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
                       </div>
                       <div className="text-right">
                         <p className="font-sans text-xl uppercase tracking-[0.03em] text-white">
-                          {match.awayTeam}
+                          {getFlagEmojiFromCode(match.awayCode)} {match.awayTeam}
                         </p>
                         <p className="mt-1 text-sm text-[var(--muted)]">{match.awayCode || "AWAY"}</p>
                       </div>

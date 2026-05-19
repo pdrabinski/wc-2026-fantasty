@@ -1,7 +1,6 @@
 import {
   sampleLeague,
   scoringDefaults,
-  seedPlayers,
   seedTeams,
   type DraftPickType,
   type FantasyLeague,
@@ -36,9 +35,9 @@ function countTeamTiers(member: LeagueMember) {
       return accumulator;
     },
     {
-      "Tier 1": 0,
-      "Tier 2": 0,
-      "Tier 3": 0,
+      "Pot 1": 0,
+      "Pot 2": 0,
+      "Pot 3": 0,
     },
   );
 }
@@ -67,41 +66,32 @@ export function validateDraftPick(league: FantasyLeague, userId: string, propose
 
   const alreadyPicked = league.picks.some((pick) => pick.targetId === proposedPick.targetId);
   if (alreadyPicked) {
-    return { isValid: false, message: "That player or team has already been drafted." };
+    return { isValid: false, message: "That team has already been drafted." };
   }
 
-  if (proposedPick.pickType === "team") {
-    const team = seedTeams.find((candidate) => candidate.id === proposedPick.targetId);
-    if (!team) {
-      return { isValid: false, message: "Selected team does not exist in the seed pool." };
-    }
-
-    if (countRoster(member, "team") >= 5) {
-      return { isValid: false, message: "This roster already has the maximum 5 teams." };
-    }
-
-    const tierCounts = countTeamTiers(member);
-    if (team.tier === "Tier 1" && tierCounts["Tier 1"] >= 1) {
-      return { isValid: false, message: "Each manager can draft only one Tier 1 team." };
-    }
-
-    if (team.tier === "Tier 2" && tierCounts["Tier 2"] >= 1) {
-      return { isValid: false, message: "Each manager can draft only one Tier 2 team." };
-    }
-
-    return { isValid: true, message: `${team.name} is a valid team pick.` };
+  if (proposedPick.pickType !== "team") {
+    return { isValid: false, message: "This league is teams only." };
   }
 
-  const player = seedPlayers.find((candidate) => candidate.id === proposedPick.targetId);
-  if (!player) {
-    return { isValid: false, message: "Selected player does not exist in the seed pool." };
+  const team = seedTeams.find((candidate) => candidate.id === proposedPick.targetId);
+  if (!team) {
+    return { isValid: false, message: "Selected team does not exist in the seed pool." };
   }
 
-  if (countRoster(member, "player") >= 6) {
-    return { isValid: false, message: "This roster already has the maximum 6 players." };
+  if (countRoster(member, "team") >= 5) {
+    return { isValid: false, message: "This roster already has the maximum 5 teams." };
   }
 
-  return { isValid: true, message: `${player.name} is a valid player pick.` };
+  const tierCounts = countTeamTiers(member);
+  if (team.tier === "Pot 1" && tierCounts["Pot 1"] >= 1) {
+    return { isValid: false, message: "Each manager can draft only one Pot 1 team." };
+  }
+
+  if (team.tier === "Pot 2" && tierCounts["Pot 2"] >= 1) {
+    return { isValid: false, message: "Each manager can draft only one Pot 2 team." };
+  }
+
+  return { isValid: true, message: `${team.name} is a valid team pick.` };
 }
 
 export function calculateTeamFantasyPoints(input: {
