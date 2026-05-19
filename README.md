@@ -26,6 +26,8 @@ A private fantasy World Cup MVP built with Next.js, TypeScript, Clerk, and Supab
 
 ## Notes
 
+- Use `NEXT_PUBLIC_SUPABASE_URL` with `NEXT_PUBLIC_SUPABASE_ANON_KEY` for public/browser access.
+- Use `SUPABASE_SECRET_KEY` for server-side writes and admin access.
 - The UI currently uses mock data so we can move fast on product flow before wiring persistence.
 - The scoring layer already separates `group` and `knockout` phases.
 - A future top-8 fantasy playoff bracket is noted in the scoring code but intentionally not built for MVP.
