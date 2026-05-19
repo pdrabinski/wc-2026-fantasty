@@ -25,6 +25,7 @@ const countryCodeToIso2: Record<string, string> = {
   AUT: "AT",
   BEL: "BE",
   BRA: "BR",
+  BIH: "BA",
   CAN: "CA",
   CIV: "CI",
   COL: "CO",

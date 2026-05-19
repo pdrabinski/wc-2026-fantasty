@@ -2,6 +2,7 @@ import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 
 import { acceptInviteAction } from "@/app/actions";
+import { getLeagueByInviteCode } from "@/lib/db";
 
 type JoinPageProps = {
   params: Promise<{
@@ -15,6 +16,7 @@ type JoinPageProps = {
 export default async function JoinInvitePage({ params, searchParams }: JoinPageProps) {
   const [{ inviteCode }, query] = await Promise.all([params, searchParams]);
   const { userId } = await auth();
+  const league = await getLeagueByInviteCode(inviteCode);
 
   return (
     <main className="mx-auto flex min-h-[calc(100vh-90px)] max-w-4xl items-center justify-center px-5 py-12 sm:px-8 lg:px-10">
@@ -23,7 +25,7 @@ export default async function JoinInvitePage({ params, searchParams }: JoinPageP
           League Invite
         </p>
         <h1 className="mt-4 font-sans text-5xl uppercase tracking-[0.04em] text-white">
-          Join league {inviteCode}
+          Join {league?.name || "league"}
         </h1>
         {query.error ? (
           <p className="mt-6 rounded-[18px] border border-[var(--danger)] bg-[rgba(207,78,78,0.12)] px-4 py-3 text-sm leading-7 text-white">

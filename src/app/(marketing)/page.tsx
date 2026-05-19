@@ -36,7 +36,7 @@ export default async function MarketingHome() {
               {signedIn ? "League Overview" : "World Cup 2026"}
             </p>
             <h1 className="mt-5 max-w-5xl font-sans text-[4rem] uppercase leading-[0.9] tracking-[0.03em] text-white sm:text-[5.5rem]">
-              {signedIn ? "Your leagues at a glance." : "Draft five nations. Crown the champion."}
+              {signedIn ? "Your league at a glance." : "Draft five nations. Crown the champion."}
             </h1>
             <p className="mt-5 max-w-2xl text-base text-[var(--muted)]">
               {signedIn
@@ -48,17 +48,17 @@ export default async function MarketingHome() {
               {signedIn ? (
                 <>
                   <Link
-                    href="/dashboard"
+                    href={leagues[0] ? `/leagues/${leagues[0].id}` : "/dashboard"}
                     className="rounded-full bg-[var(--gold)] px-6 py-3 font-sans text-sm uppercase tracking-[0.18em] text-[var(--ink)] transition hover:brightness-105"
                   >
-                    Open Admin
+                    {leagues[0] ? "Open League" : "Open Admin"}
                   </Link>
                   {leagues[0] ? (
                     <Link
-                      href={`/leagues/${leagues[0].id}`}
+                      href="/dashboard"
                       className="rounded-full border border-[var(--line-strong)] px-6 py-3 font-sans text-sm uppercase tracking-[0.18em] text-white transition hover:border-white/70"
                     >
-                      Open Latest League
+                      Open Admin
                     </Link>
                   ) : null}
                 </>
@@ -104,34 +104,31 @@ export default async function MarketingHome() {
         {signedIn ? (
           <section className="mt-14 border-t border-[var(--line)] pt-6">
             <p className="font-sans text-xs uppercase tracking-[0.18em] text-[var(--gold)]">
-              Your Leagues
+              Your League
             </p>
             <div className="mt-4 space-y-4">
-              {leagues.length === 0 ? (
+              {!leagues[0] ? (
                 <div className="border-t border-white/10 pt-4 text-sm leading-7 text-[var(--muted)]">
                   No leagues yet.
                 </div>
               ) : (
-                leagues.slice(0, 4).map((league) => (
-                  <Link
-                    key={league.id}
-                    href={`/leagues/${league.id}`}
-                    className="block border-t border-white/10 py-4 transition hover:border-white/25"
-                  >
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <h2 className="font-sans text-2xl uppercase tracking-[0.03em] text-white">
-                        {league.name}
-                      </h2>
-                      <span className="rounded-full border border-white/10 px-3 py-1 font-sans text-[0.68rem] uppercase tracking-[0.18em] text-[var(--muted)]">
-                        {league.status.replace("_", " ")}
-                      </span>
-                    </div>
-                    <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-[var(--muted)]">
-                      <span>{league.memberCount} / {league.maxMembers} members</span>
-                      <span>Code: {league.inviteCode}</span>
-                    </div>
-                  </Link>
-                ))
+                <Link
+                  href={`/leagues/${leagues[0].id}`}
+                  className="block border-t border-white/10 py-4 transition hover:border-white/25"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <h2 className="font-sans text-2xl uppercase tracking-[0.03em] text-white">
+                      {leagues[0].name}
+                    </h2>
+                    <span className="rounded-full border border-white/10 px-3 py-1 font-sans text-[0.68rem] uppercase tracking-[0.18em] text-[var(--muted)]">
+                      {leagues[0].status.replace("_", " ")}
+                    </span>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-[var(--muted)]">
+                    <span>{leagues[0].memberCount} / {leagues[0].maxMembers} members</span>
+                    <span>Code: {leagues[0].inviteCode}</span>
+                  </div>
+                </Link>
               )}
             </div>
           </section>

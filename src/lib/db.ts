@@ -650,6 +650,33 @@ export async function joinLeagueForUser(user: CurrentAppUser, inviteCode: string
   return league.id;
 }
 
+export async function getLeagueByInviteCode(inviteCode: string) {
+  if (!hasSupabaseEnv) {
+    return null;
+  }
+
+  const supabase = getSupabaseServerClient();
+  const normalizedCode = inviteCode.trim().toUpperCase();
+  const { data, error } = await supabase
+    .from("leagues")
+    .select("id,name,invite_code,status,max_members,created_at")
+    .eq("invite_code", normalizedCode)
+    .maybeSingle<LeagueRow>();
+
+  if (error || !data) {
+    return null;
+  }
+
+  return {
+    id: data.id,
+    name: data.name,
+    inviteCode: data.invite_code,
+    status: data.status,
+    maxMembers: data.max_members,
+    createdAt: data.created_at,
+  };
+}
+
 function mapRosterEntries(
   rosterRows: RosterRow[],
   teams: Map<string, TeamRow>,

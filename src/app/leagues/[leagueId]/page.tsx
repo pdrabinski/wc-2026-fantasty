@@ -39,6 +39,25 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
   const canStartDraft = league.currentUserId === league.commissionerUserId;
   const teamCodeById = new Map(seedTeams.map((team) => [team.id, team.countryCode]));
 
+  function formatStageLabel(value: string) {
+    return value
+      .replace(/_/g, " ")
+      .replace(/\bR16\b/i, "Round of 16")
+      .replace(/\bR32\b/i, "Round of 32")
+      .replace(/\bQF\b/i, "Quarterfinal")
+      .replace(/\bSF\b/i, "Semifinal")
+      .replace(/\bGROUP STAGE\b/i, "Group Stage")
+      .replace(/\bFINAL\b/i, "Final");
+  }
+
+  function formatGroupLabel(value?: string | null) {
+    if (!value) {
+      return "";
+    }
+
+    return value.replace(/^GROUP_/i, "Group ");
+  }
+
   return (
     <main className="mx-auto max-w-7xl px-5 pb-16 pt-8 sm:px-8 lg:px-10">
       {query.error ? (
@@ -81,12 +100,6 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
                 Commissioner
               </p>
               <p className="mt-2 text-xl text-white">{league.commissionerName}</p>
-            </div>
-            <div>
-              <p className="font-sans text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
-                Match feed
-              </p>
-              <p className="mt-2 text-xl text-white">{tournament.provider.label}</p>
             </div>
           </div>
         </div>
@@ -135,23 +148,6 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
                 </p>
                 <h2 className="mt-2 font-sans text-3xl uppercase tracking-[0.03em] text-white">Feed</h2>
               </div>
-              <span className="rounded-full border border-white/10 px-3 py-1 font-sans text-[0.68rem] uppercase tracking-[0.18em] text-[var(--muted)]">
-                {tournament.provider.mode === "live" ? "live feed" : "manual fallback"}
-              </span>
-            </div>
-            <p className="mt-3 text-sm leading-7 text-[var(--muted)]">
-              {tournament.provider.mode === "live" ? "Live tournament feed." : "Fallback feed."}
-            </p>
-            <div className="mt-3 flex flex-wrap gap-3 text-sm text-[var(--muted)]">
-              <a className="underline-offset-4 hover:underline" href={tournament.provider.links.footballDataDocs} target="_blank" rel="noreferrer">
-                football-data docs
-              </a>
-              <a className="underline-offset-4 hover:underline" href={tournament.provider.links.fifaSchedule} target="_blank" rel="noreferrer">
-                FIFA schedule
-              </a>
-              <a className="underline-offset-4 hover:underline" href={tournament.provider.links.fifaQualified} target="_blank" rel="noreferrer">
-                FIFA qualified teams
-              </a>
             </div>
             <div className="mt-5 space-y-3">
               {tournament.matches.slice(0, 6).map((match) => (
@@ -161,7 +157,7 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <span className="font-sans text-[0.68rem] uppercase tracking-[0.18em] text-[var(--gold)]">
-                      {match.stage}{match.groupName ? ` · Group ${match.groupName}` : ""}
+                      {formatStageLabel(match.stage)}{match.groupName ? ` · ${formatGroupLabel(match.groupName)}` : ""}
                     </span>
                     <span className="text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
                       {new Date(match.kickoffAt).toLocaleString("en-US", {
@@ -298,7 +294,7 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
                   >
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <span className="font-sans text-[0.68rem] uppercase tracking-[0.18em] text-[var(--gold)]">
-                        {match.stage}
+                        {formatStageLabel(match.stage)}
                       </span>
                       <span className="text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
                         {new Date(match.kickoffAt).toLocaleString("en-US", {
