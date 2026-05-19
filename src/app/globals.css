@@ -18,6 +18,9 @@
   --green-soft: rgba(38, 177, 76, 0.24);
   --blue-soft: rgba(31, 81, 198, 0.28);
   --red-soft: rgba(239, 70, 57, 0.22);
+  --yellow: #ffd24d;
+  --yellow-soft: rgba(255, 210, 77, 0.2);
+  --teal-soft: rgba(42, 198, 192, 0.2);
   --danger: #cf4e4e;
   --shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
   --font-heading: "Oswald", "Arial Narrow", "Franklin Gothic Medium", "Helvetica Neue Condensed", Impact, sans-serif;
@@ -37,19 +40,31 @@
 
 html {
   background:
-    radial-gradient(circle at top left, rgba(38, 177, 76, 0.26), transparent 26%),
-    radial-gradient(circle at top right, rgba(239, 70, 57, 0.28), transparent 28%),
-    radial-gradient(circle at 50% 20%, rgba(255,255,255,0.08), transparent 18%),
-    radial-gradient(circle at bottom, rgba(31, 81, 198, 0.32), transparent 34%),
-    linear-gradient(180deg, #0a1f47 0%, #04122b 44%, #081019 100%);
+    radial-gradient(circle at top left, rgba(38, 177, 76, 0.34), transparent 24%),
+    radial-gradient(circle at top right, rgba(239, 70, 57, 0.34), transparent 26%),
+    radial-gradient(circle at 18% 70%, rgba(255, 210, 77, 0.16), transparent 18%),
+    radial-gradient(circle at 82% 68%, rgba(42, 198, 192, 0.16), transparent 22%),
+    radial-gradient(circle at 50% 18%, rgba(255,255,255,0.1), transparent 16%),
+    radial-gradient(circle at bottom, rgba(31, 81, 198, 0.4), transparent 34%),
+    linear-gradient(180deg, #102b61 0%, #04122b 42%, #081019 100%);
 }
 
 body {
   margin: 0;
   min-height: 100vh;
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.05), transparent 26%),
-    linear-gradient(90deg, rgba(38, 177, 76, 0.08), transparent 18%, rgba(31, 81, 198, 0.08) 50%, rgba(239, 70, 57, 0.08) 82%, transparent 100%),
+    repeating-linear-gradient(
+      90deg,
+      rgba(38, 177, 76, 0.025) 0,
+      rgba(38, 177, 76, 0.025) 72px,
+      transparent 72px,
+      transparent 144px
+    ),
+    radial-gradient(circle at 12% 0%, rgba(38, 177, 76, 0.12), transparent 18%),
+    radial-gradient(circle at 88% 0%, rgba(239, 70, 57, 0.14), transparent 20%),
+    radial-gradient(circle at 50% 100%, rgba(31, 81, 198, 0.14), transparent 26%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.06), transparent 26%),
+    linear-gradient(90deg, rgba(38, 177, 76, 0.09), transparent 16%, rgba(31, 81, 198, 0.1) 50%, rgba(239, 70, 57, 0.09) 84%, transparent 100%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 20%);
   color: var(--text);
   font-family: var(--font-body), sans-serif;

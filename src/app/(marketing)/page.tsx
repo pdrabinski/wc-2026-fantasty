@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { SignInButton, SignUpButton } from "@clerk/nextjs";
 
@@ -9,8 +9,14 @@ const hasClerkEnv = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
 export default async function MarketingHome() {
   const { userId } = await auth();
+  const clerkUser = userId ? await currentUser() : null;
   const featuredTeams = seedTeams.slice(0, 6);
   const signedIn = Boolean(userId);
+  const displayName =
+    clerkUser?.firstName ||
+    clerkUser?.fullName ||
+    clerkUser?.username ||
+    "there";
   let leagues: Awaited<ReturnType<typeof getDashboardLeagues>> = [];
   let homeError: string | null = null;
 
@@ -32,37 +38,22 @@ export default async function MarketingHome() {
       <section className="mx-auto max-w-7xl px-5 pb-16 pt-8 sm:px-8 lg:px-10">
         <div className="max-w-4xl">
           <div>
-            <p className="font-sans text-[0.72rem] uppercase tracking-[0.32em] text-[var(--gold)]">
-              {signedIn ? "League Overview" : "World Cup 2026"}
-            </p>
+            {!signedIn ? (
+              <p className="font-sans text-[0.72rem] uppercase tracking-[0.32em] text-[var(--gold)]">
+                World Cup 2026
+              </p>
+            ) : null}
             <h1 className="mt-5 max-w-5xl font-sans text-[4rem] uppercase leading-[0.9] tracking-[0.03em] text-white sm:text-[5.5rem]">
-              {signedIn ? "Your league at a glance." : "Draft five nations. Crown the champion."}
+              {signedIn ? `Welcome ${displayName}` : "Draft five nations. Crown the champion."}
             </h1>
             <p className="mt-5 max-w-2xl text-base text-[var(--muted)]">
               {signedIn
-                ? "Jump back into a league or open admin."
-                : "Create a league, draft your pool, and track the tournament."}
+                ? "Your table, fixtures, and squad are ready."
+                : "Create a league, draft your pool, and chase the trophy."}
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
-              {signedIn ? (
-                <>
-                  <Link
-                    href={leagues[0] ? `/leagues/${leagues[0].id}` : "/dashboard"}
-                    className="rounded-full bg-[var(--gold)] px-6 py-3 font-sans text-sm uppercase tracking-[0.18em] text-[var(--ink)] transition hover:brightness-105"
-                  >
-                    {leagues[0] ? "Open League" : "Open Admin"}
-                  </Link>
-                  {leagues[0] ? (
-                    <Link
-                      href="/dashboard"
-                      className="rounded-full border border-[var(--line-strong)] px-6 py-3 font-sans text-sm uppercase tracking-[0.18em] text-white transition hover:border-white/70"
-                    >
-                      Open Admin
-                    </Link>
-                  ) : null}
-                </>
-              ) : hasClerkEnv ? (
+              {!signedIn && hasClerkEnv ? (
                 <>
                   <SignUpButton mode="modal">
                     <button className="rounded-full bg-[var(--gold)] px-6 py-3 font-sans text-sm uppercase tracking-[0.18em] text-[var(--ink)] transition hover:brightness-105">
@@ -75,7 +66,7 @@ export default async function MarketingHome() {
                     </button>
                   </SignInButton>
                 </>
-              ) : (
+              ) : !signedIn ? (
                 <>
                   <Link
                     href="/dashboard"
@@ -90,7 +81,7 @@ export default async function MarketingHome() {
                     Sign In
                   </Link>
                 </>
-              )}
+              ) : null}
             </div>
           </div>
         </div>
@@ -104,7 +95,7 @@ export default async function MarketingHome() {
         {signedIn ? (
           <section className="mt-14 border-t border-[var(--line)] pt-6">
             <p className="font-sans text-xs uppercase tracking-[0.18em] text-[var(--gold)]">
-              Your League
+              Your Club
             </p>
             <div className="mt-4 space-y-4">
               {!leagues[0] ? (

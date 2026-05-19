@@ -3,6 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { notFound, redirect } from "next/navigation";
 
 import { startDraftAction, syncTournamentMatchesAction } from "@/app/actions";
+import { CopyInviteLink } from "@/components/copy-invite-link";
 import { getLeagueByIdForUser, getStoredMatches } from "@/lib/db";
 import { getFlagEmojiFromCode, seedTeams } from "@/lib/fantasy-data";
 import { getTournamentDataSnapshot } from "@/lib/world-cup-data";
@@ -69,7 +70,7 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
       <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
         <section>
           <p className="font-sans text-[0.72rem] uppercase tracking-[0.32em] text-[var(--gold)]">
-            League Hub
+            Match Centre
           </p>
           <h1 className="mt-3 font-sans text-5xl uppercase tracking-[0.04em] text-white">
             {league.name}
@@ -85,7 +86,7 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
               href={`/leagues/${league.id}/draft`}
               className="rounded-full border border-[var(--line-strong)] px-4 py-2 font-sans text-xs uppercase tracking-[0.18em] text-white"
             >
-              Open Draft Room
+              Draft Room
             </Link>
           </div>
           <div className="mt-5 grid gap-4 sm:grid-cols-3">
@@ -93,9 +94,7 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
               <p className="font-sans text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
                 Invite link
               </p>
-              <p className="mt-2 text-xl text-white">
-                https://wc-2026-fantasty.vercel.app{league.inviteLink}
-              </p>
+              <CopyInviteLink href={`https://wc-2026-fantasty.vercel.app${league.inviteLink}`} />
             </div>
             <div>
               <p className="font-sans text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
@@ -145,11 +144,11 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
           <article className="border-t border-[var(--line)] pt-6">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="font-sans text-xs uppercase tracking-[0.18em] text-[var(--gold)]">
-                  Matches
-                </p>
-                <h2 className="mt-2 font-sans text-3xl uppercase tracking-[0.03em] text-white">Feed</h2>
-              </div>
+              <p className="font-sans text-xs uppercase tracking-[0.18em] text-[var(--gold)]">
+                Matches
+              </p>
+              <h2 className="mt-2 font-sans text-3xl uppercase tracking-[0.03em] text-white">Fixtures</h2>
+            </div>
             </div>
             <div className="mt-5 space-y-3">
               {tournament.matches.slice(0, 6).map((match) => (
@@ -157,17 +156,18 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
                   key={match.id}
                   className="border-t border-white/10 py-4"
                 >
-                  <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="grid gap-2 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
                     <span className="font-sans text-[0.68rem] uppercase tracking-[0.18em] text-[var(--gold)]">
                       {formatStageLabel(match.stage)}{match.groupName ? ` · ${formatGroupLabel(match.groupName)}` : ""}
                     </span>
-                    <span className="text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
+                    <span className="text-xs uppercase tracking-[0.18em] text-[var(--muted)] sm:text-center">
                       {new Date(match.kickoffAt).toLocaleString("en-US", {
                         dateStyle: "medium",
                         timeStyle: "short",
                         timeZone: "America/Denver",
                       })}
                     </span>
+                    <span className="hidden sm:block" aria-hidden="true" />
                   </div>
                   <div className="mt-3 flex items-center justify-between gap-4">
                     <div>
@@ -181,7 +181,7 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
                         {match.homeScore ?? "-"} : {match.awayScore ?? "-"}
                       </p>
                       <p className="mt-1 text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
-                        {match.status}
+                        {match.status === "TIMED" ? "Kickoff" : match.status}
                       </p>
                     </div>
                     <div className="text-right">
@@ -198,7 +198,7 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
 
           <article className="border-t border-[var(--line)] pt-6">
             <p className="font-sans text-xs uppercase tracking-[0.18em] text-[var(--gold)]">
-              Rosters
+              Squads
             </p>
             <div className="mt-4 space-y-4">
               {league.members.map((member) => (
@@ -207,13 +207,13 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
                     <h3 className="font-sans text-2xl uppercase tracking-[0.03em] text-white">
                       {member.displayName}
                     </h3>
-                    <span className="rounded-full border border-white/10 px-3 py-1 font-sans text-[0.68rem] uppercase tracking-[0.18em] text-[var(--muted)]">
-                      Pick slot {member.draftPosition || "TBD"}
+                      <span className="rounded-full border border-white/10 px-3 py-1 font-sans text-[0.68rem] uppercase tracking-[0.18em] text-[var(--muted)]">
+                      Draft spot {member.draftPosition || "TBD"}
                     </span>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {member.roster.length === 0 ? (
-                      <span className="text-sm text-[var(--muted)]">No picks.</span>
+                      <span className="text-sm text-[var(--muted)]">No teams drafted.</span>
                     ) : (
                       member.roster.map((item) => (
                         <span
@@ -232,7 +232,7 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
 
           <article className="border-t border-[var(--line)] pt-6">
             <p className="font-sans text-xs uppercase tracking-[0.18em] text-[var(--gold)]">
-              Commissioner Controls
+              Matchday Controls
             </p>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <form action={startDraftAction}>
@@ -241,7 +241,7 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
                   disabled={!canStartDraft}
                   className="w-full border-t border-white/10 px-0 py-3 text-left font-sans text-xs uppercase tracking-[0.16em] text-white disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {league.status === "drafting" ? "Re-randomize draft order" : "Start draft"}
+                  {league.status === "drafting" ? "Re-draw order" : "Start draft"}
                 </button>
               </form>
               <form action={syncTournamentMatchesAction}>
@@ -250,7 +250,7 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
                   disabled={!canStartDraft}
                   className="w-full border-t border-white/10 px-0 py-3 text-left font-sans text-xs uppercase tracking-[0.16em] text-white disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  Sync tournament fixtures
+                  Sync fixtures
                 </button>
               </form>
               {[
