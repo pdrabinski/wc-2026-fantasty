@@ -48,7 +48,7 @@ export default async function DraftPage({ params, searchParams }: DraftPageProps
   return (
     <main className="mx-auto max-w-7xl px-5 pb-16 pt-8 sm:px-8 lg:px-10">
       {query.error ? (
-        <section className="mb-6 rounded-[22px] border border-[var(--danger)] bg-[rgba(207,78,78,0.12)] px-5 py-4 text-sm leading-7 text-white">
+        <section className="mb-6 border-t border-[var(--danger)] px-1 py-4 text-sm leading-7 text-white">
           {query.error}
         </section>
       ) : null}
@@ -59,7 +59,7 @@ export default async function DraftPage({ params, searchParams }: DraftPageProps
             Draft Room
           </p>
           <h1 className="mt-3 font-sans text-5xl uppercase tracking-[0.04em] text-white">
-            Snake draft control center
+            Draft
           </h1>
         </div>
         <div className="flex flex-wrap gap-3">
@@ -80,7 +80,7 @@ export default async function DraftPage({ params, searchParams }: DraftPageProps
 
       <section className="mt-8 grid gap-6 xl:grid-cols-[0.85fr_1.15fr]">
         <aside className="space-y-6">
-          <article className="rounded-[28px] border border-[var(--line)] bg-[linear-gradient(180deg,rgba(247,246,241,0.96),rgba(220,230,225,0.95))] p-6 text-[var(--ink)]">
+          <article className="border-t border-[var(--line)] pt-6 text-white">
             <p className="font-sans text-xs uppercase tracking-[0.18em] text-[var(--pitch)]">
               On the Clock
             </p>
@@ -99,8 +99,8 @@ export default async function DraftPage({ params, searchParams }: DraftPageProps
                 <p className="mt-1 text-3xl">{draft.pickNumber}</p>
               </div>
             </div>
-            <div className="mt-5 rounded-[22px] border border-black/10 bg-white p-4">
-              <p className="font-sans text-xs uppercase tracking-[0.18em] text-black/50">
+            <div className="mt-5 border-t border-white/10 pt-4">
+              <p className="font-sans text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
                 Suggested validation
               </p>
               <p className="mt-2 text-sm leading-7">
@@ -120,7 +120,7 @@ export default async function DraftPage({ params, searchParams }: DraftPageProps
             </div>
           </article>
 
-          <article className="rounded-[28px] border border-[var(--line)] bg-white/6 p-6">
+          <article className="border-t border-[var(--line)] pt-6">
             <p className="font-sans text-xs uppercase tracking-[0.18em] text-[var(--gold)]">
               Draft Order
             </p>
@@ -128,7 +128,7 @@ export default async function DraftPage({ params, searchParams }: DraftPageProps
               {draft.order.map((member, index) => (
                 <div
                   key={`${member.userId}-${index}`}
-                  className="flex items-center justify-between rounded-[18px] border border-white/10 bg-black/15 px-4 py-3"
+                  className="flex items-center justify-between border-t border-white/10 py-3"
                 >
                   <span className="font-sans text-sm uppercase tracking-[0.12em] text-white">
                     {index + 1}. {member.displayName}
@@ -143,15 +143,13 @@ export default async function DraftPage({ params, searchParams }: DraftPageProps
         </aside>
 
         <div className="grid gap-6">
-          <article className="rounded-[28px] border border-[var(--line)] bg-white/6 p-6">
+          <article className="border-t border-[var(--line)] pt-6">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
                 <p className="font-sans text-xs uppercase tracking-[0.18em] text-[var(--gold)]">
                   Available Teams
                 </p>
-                <h2 className="mt-2 font-sans text-3xl uppercase tracking-[0.03em] text-white">
-                  Tier-balanced board
-                </h2>
+                <h2 className="mt-2 font-sans text-3xl uppercase tracking-[0.03em] text-white">Teams</h2>
               </div>
               <span className="rounded-full border border-white/10 px-4 py-2 font-sans text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
                 1 Tier 1, 1 Tier 2, 3 Tier 3+
@@ -160,7 +158,7 @@ export default async function DraftPage({ params, searchParams }: DraftPageProps
 
             <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               {availableTeams.map((team) => (
-                <div key={team.id} className="rounded-[20px] border border-white/10 bg-black/15 p-4">
+                <div key={team.id} className="border-t border-white/10 py-4">
                   <div className="flex items-center justify-between gap-3">
                     <h3 className="font-sans text-xl uppercase tracking-[0.03em] text-white">
                       {team.name}
@@ -188,13 +186,13 @@ export default async function DraftPage({ params, searchParams }: DraftPageProps
             </div>
           </article>
 
-          <article className="rounded-[28px] border border-[var(--line)] bg-white/6 p-6">
+          <article className="border-t border-[var(--line)] pt-6">
             <p className="font-sans text-xs uppercase tracking-[0.18em] text-[var(--gold)]">
               Available Players
             </p>
             <div className="mt-4 grid gap-3 md:grid-cols-2">
               {availablePlayers.map((player) => (
-                <div key={player.id} className="rounded-[18px] border border-white/10 bg-black/15 p-4">
+                <div key={player.id} className="border-t border-white/10 py-4">
                   <div className="flex items-center justify-between gap-3">
                     <h3 className="font-sans text-lg uppercase tracking-[0.03em] text-white">
                       {player.name}
@@ -222,7 +220,7 @@ export default async function DraftPage({ params, searchParams }: DraftPageProps
             </div>
           </article>
 
-          <article className="rounded-[28px] border border-[var(--line)] bg-white/6 p-6">
+          <article className="border-t border-[var(--line)] pt-6">
             <p className="font-sans text-xs uppercase tracking-[0.18em] text-[var(--gold)]">
               Pick History
             </p>
@@ -230,7 +228,7 @@ export default async function DraftPage({ params, searchParams }: DraftPageProps
               {league.picks.map((pick) => (
                 <div
                   key={pick.id}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-[18px] border border-white/10 bg-black/15 px-4 py-3"
+                  className="flex flex-wrap items-center justify-between gap-3 border-t border-white/10 py-3"
                 >
                   <span className="font-sans text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
                     Round {pick.round} · Pick {pick.pickNumber}

@@ -4,7 +4,6 @@ import { redirect } from "next/navigation";
 
 import { createLeagueAction, joinLeagueAction } from "@/app/actions";
 import { getDashboardLeagues, getPersistenceState, syncCurrentUser } from "@/lib/db";
-import { sampleLeague, summarizeLeague } from "@/lib/fantasy-data";
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +24,6 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const persistence = await getPersistenceState();
   const appUser = await syncCurrentUser();
   const leagues = appUser ? await getDashboardLeagues(userId) : [];
-  const summary = summarizeLeague(sampleLeague);
 
   return (
     <main className="mx-auto max-w-7xl px-5 pb-16 pt-8 sm:px-8 lg:px-10">
@@ -41,26 +39,26 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       </div>
 
       {params.error ? (
-        <section className="mt-6 rounded-[22px] border border-[var(--danger)] bg-[rgba(207,78,78,0.12)] px-5 py-4 text-sm leading-7 text-white">
+        <section className="mt-6 border-t border-[var(--danger)] px-1 py-4 text-sm leading-7 text-white">
           {params.error}
         </section>
       ) : null}
 
       {!persistence.available ? (
-        <section className="mt-6 rounded-[22px] border border-[var(--gold)] bg-[rgba(211,170,69,0.12)] px-5 py-4 text-sm leading-7 text-white">
+        <section className="mt-6 border-t border-[var(--gold)] px-1 py-4 text-sm leading-7 text-white">
           Supabase is not ready yet. Run the SQL in [supabase/schema.sql](/Users/pauldrabinski/Projects/world-cup-fantasy/supabase/schema.sql), then refresh.
           <br />
           <span className="text-[var(--muted)]">{persistence.reason}</span>
         </section>
       ) : null}
 
-      <section className="mt-8 grid gap-5 lg:grid-cols-[0.95fr_1.05fr]">
-        <article className="rounded-[28px] border border-[var(--line)] bg-white/6 p-6">
+      <section className="mt-8">
+        <article className="border-t border-[var(--line)] pt-6">
           <p className="font-sans text-xs uppercase tracking-[0.18em] text-[var(--gold)]">
             League Controls
           </p>
           <div className="mt-5 grid gap-5 lg:grid-cols-2">
-            <form action={createLeagueAction} className="rounded-[22px] border border-white/10 bg-black/15 p-4">
+            <form action={createLeagueAction} className="border-t border-white/10 pt-4">
               <h2 className="font-sans text-2xl uppercase tracking-[0.03em] text-white">Create league</h2>
               <label className="mt-4 block text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
                 League name
@@ -89,7 +87,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
               </button>
             </form>
 
-            <form action={joinLeagueAction} className="rounded-[22px] border border-white/10 bg-black/15 p-4">
+            <form action={joinLeagueAction} className="border-t border-white/10 pt-4">
               <h2 className="font-sans text-2xl uppercase tracking-[0.03em] text-white">Join with invite</h2>
               <label className="mt-4 block text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
                 Invite code
@@ -105,63 +103,16 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             </form>
           </div>
         </article>
-
-        <article className="rounded-[28px] border border-[var(--line)] bg-white/6 p-6">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <p className="font-sans text-xs uppercase tracking-[0.18em] text-[var(--gold)]">
-                Example League Card
-              </p>
-              <h2 className="mt-3 font-sans text-4xl uppercase tracking-[0.04em] text-white">
-                {sampleLeague.name}
-              </h2>
-              <p className="mt-3 max-w-xl text-base leading-7 text-[var(--muted)]">
-                A commissioner-run league with seeded teams, players, match cards, and split-phase
-                scoring.
-              </p>
-            </div>
-            <span className="rounded-full bg-[var(--pitch)] px-4 py-2 font-sans text-xs uppercase tracking-[0.18em] text-white">
-              {sampleLeague.status.replace("_", " ")}
-            </span>
-          </div>
-
-          <div className="mt-6 grid gap-4 sm:grid-cols-3">
-            <div className="rounded-[22px] bg-black/20 p-4">
-              <p className="font-sans text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
-                Members
-              </p>
-              <p className="mt-2 font-sans text-4xl uppercase text-white">{summary.memberCount}</p>
-            </div>
-            <div className="rounded-[22px] bg-black/20 p-4">
-              <p className="font-sans text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
-                Group Leader
-              </p>
-              <p className="mt-2 font-sans text-4xl uppercase text-white">{summary.groupLeader}</p>
-            </div>
-            <div className="rounded-[22px] bg-black/20 p-4">
-              <p className="font-sans text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
-                Invite Code
-              </p>
-              <p className="mt-2 font-sans text-4xl uppercase text-white">{sampleLeague.inviteCode}</p>
-            </div>
-          </div>
-
-          <div className="mt-6 flex flex-wrap gap-3">
-            <span className="rounded-full bg-[var(--gold)] px-5 py-3 font-sans text-sm uppercase tracking-[0.18em] text-[var(--ink)]">
-              UI Preview
-            </span>
-          </div>
-        </article>
       </section>
 
-      <section className="mt-8 grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
-        <article className="rounded-[28px] border border-[var(--line)] bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] p-6">
+      <section className="mt-8">
+        <article className="border-t border-[var(--line)] pt-6">
           <p className="font-sans text-xs uppercase tracking-[0.18em] text-[var(--gold)]">
             Your Leagues
           </p>
           <div className="mt-4 space-y-4">
             {leagues.length === 0 ? (
-              <div className="rounded-[22px] border border-white/10 bg-black/15 p-4 text-sm leading-7 text-[var(--muted)]">
+              <div className="border-t border-white/10 pt-4 text-sm leading-7 text-[var(--muted)]">
                 No leagues yet.
               </div>
             ) : (
@@ -169,7 +120,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                 <Link
                   key={league.id}
                   href={`/leagues/${league.id}`}
-                  className="block rounded-[22px] border border-white/10 bg-black/15 p-4 transition hover:border-white/25"
+                  className="block border-t border-white/10 py-4 transition hover:border-white/25"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <h3 className="font-sans text-2xl uppercase tracking-[0.03em] text-white">
@@ -189,25 +140,6 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             )}
           </div>
         </article>
-
-        <aside className="rounded-[28px] border border-[var(--line)] bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] p-6">
-          <p className="font-sans text-xs uppercase tracking-[0.18em] text-[var(--gold)]">
-            MVP Progress
-          </p>
-          <div className="mt-4 space-y-4">
-            {[
-              "Create league and invite friends",
-              "Start commissioner-controlled snake draft",
-              "Save 5 teams and 6 players per manager",
-              "Manually enter results and recalculate points",
-              "Lock group stage and reset knockout race",
-            ].map((item) => (
-              <div key={item} className="rounded-[22px] border border-white/10 bg-black/15 p-4">
-                <p className="text-sm leading-7 text-white">{item}</p>
-              </div>
-            ))}
-          </div>
-        </aside>
       </section>
     </main>
   );

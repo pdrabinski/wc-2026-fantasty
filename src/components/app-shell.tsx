@@ -22,9 +22,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
             <div>
               <p className="font-sans text-[0.66rem] uppercase tracking-[0.28em] text-[var(--gold)]">
-                World Cup Fantasy
+                WC Fantasy League
               </p>
-              <p className="text-sm text-[var(--muted)]">Private league manager</p>
             </div>
           </Link>
 

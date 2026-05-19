@@ -40,7 +40,7 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
   return (
     <main className="mx-auto max-w-7xl px-5 pb-16 pt-8 sm:px-8 lg:px-10">
       {query.error ? (
-        <section className="mb-6 rounded-[22px] border border-[var(--danger)] bg-[rgba(207,78,78,0.12)] px-5 py-4 text-sm leading-7 text-white">
+        <section className="mb-6 border-t border-[var(--danger)] px-1 py-4 text-sm leading-7 text-white">
           {query.error}
         </section>
       ) : null}
@@ -55,7 +55,7 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
           </h1>
         </section>
 
-        <div className="rounded-[28px] border border-[var(--line)] bg-white/6 p-6">
+        <div className="border-t border-[var(--line)] pt-6">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <span className="rounded-full bg-[var(--pitch)] px-4 py-2 font-sans text-xs uppercase tracking-[0.18em] text-white">
               {league.status.replace("_", " ")}
@@ -91,24 +91,19 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
       </div>
 
       <section className="mt-8 grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
-        <article className="rounded-[28px] border border-[var(--line)] bg-[linear-gradient(180deg,rgba(247,246,241,0.96),rgba(220,230,225,0.95))] p-6 text-[var(--ink)]">
+        <article className="border-t border-[var(--line)] pt-6 text-white">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="font-sans text-xs uppercase tracking-[0.18em] text-[var(--pitch)]">
+              <p className="font-sans text-xs uppercase tracking-[0.18em] text-[var(--gold)]">
                 Standings
               </p>
-              <h2 className="mt-2 font-sans text-4xl uppercase tracking-[0.03em]">
-                Group Stage Table
-              </h2>
+              <h2 className="mt-2 font-sans text-4xl uppercase tracking-[0.03em] text-white">Table</h2>
             </div>
-            <span className="rounded-full bg-[var(--gold)] px-4 py-2 font-sans text-xs uppercase tracking-[0.18em]">
-              Leaderboard frozen later
-            </span>
           </div>
 
-          <div className="mt-5 overflow-hidden rounded-[22px] border border-black/10">
+          <div className="mt-5 overflow-hidden border-t border-white/10">
             <table className="min-w-full border-collapse text-left text-sm">
-              <thead className="bg-black/5 font-sans uppercase tracking-[0.18em] text-black/55">
+              <thead className="font-sans uppercase tracking-[0.18em] text-[var(--muted)]">
                 <tr>
                   <th className="px-4 py-3">Manager</th>
                   <th className="px-4 py-3">Team Pts</th>
@@ -120,7 +115,7 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
                 {league.scores.group.map((score) => {
                   const member = league.members.find((entry) => entry.userId === score.userId);
                   return (
-                    <tr key={score.userId} className="border-t border-black/10">
+                    <tr key={score.userId} className="border-t border-white/10">
                       <td className="px-4 py-4">{member?.displayName}</td>
                       <td className="px-4 py-4">{score.teamPoints}</td>
                       <td className="px-4 py-4">{score.playerPoints}</td>
@@ -134,15 +129,13 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
         </article>
 
         <div className="grid gap-6">
-          <article className="rounded-[28px] border border-[var(--line)] bg-white/6 p-6">
+          <article className="border-t border-[var(--line)] pt-6">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="font-sans text-xs uppercase tracking-[0.18em] text-[var(--gold)]">
                   Matches
                 </p>
-                <h2 className="mt-2 font-sans text-3xl uppercase tracking-[0.03em] text-white">
-                  Tournament feed
-                </h2>
+                <h2 className="mt-2 font-sans text-3xl uppercase tracking-[0.03em] text-white">Feed</h2>
               </div>
               <span className="rounded-full border border-white/10 px-3 py-1 font-sans text-[0.68rem] uppercase tracking-[0.18em] text-[var(--muted)]">
                 {tournament.provider.mode === "live" ? "live feed" : "manual fallback"}
@@ -166,7 +159,7 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
               {tournament.matches.slice(0, 6).map((match) => (
                 <div
                   key={match.id}
-                  className="rounded-[20px] border border-white/10 bg-black/15 p-4"
+                  className="border-t border-white/10 py-4"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <span className="font-sans text-[0.68rem] uppercase tracking-[0.18em] text-[var(--gold)]">
@@ -207,13 +200,13 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
             </div>
           </article>
 
-          <article className="rounded-[28px] border border-[var(--line)] bg-white/6 p-6">
+          <article className="border-t border-[var(--line)] pt-6">
             <p className="font-sans text-xs uppercase tracking-[0.18em] text-[var(--gold)]">
               Rosters
             </p>
             <div className="mt-4 space-y-4">
               {league.members.map((member) => (
-                <div key={member.userId} className="rounded-[22px] border border-white/10 bg-black/15 p-4">
+                <div key={member.userId} className="border-t border-white/10 py-4">
                   <div className="flex items-center justify-between gap-4">
                     <h3 className="font-sans text-2xl uppercase tracking-[0.03em] text-white">
                       {member.displayName}
@@ -241,7 +234,7 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
             </div>
           </article>
 
-          <article className="rounded-[28px] border border-[var(--line)] bg-white/6 p-6">
+          <article className="border-t border-[var(--line)] pt-6">
             <p className="font-sans text-xs uppercase tracking-[0.18em] text-[var(--gold)]">
               Commissioner Controls
             </p>
@@ -250,7 +243,7 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
                 <input type="hidden" name="leagueId" value={league.id} />
                 <button
                   disabled={!canStartDraft}
-                  className="w-full rounded-[18px] border border-white/10 bg-black/15 px-4 py-3 text-left font-sans text-xs uppercase tracking-[0.16em] text-white disabled:cursor-not-allowed disabled:opacity-50"
+                  className="w-full border-t border-white/10 px-0 py-3 text-left font-sans text-xs uppercase tracking-[0.16em] text-white disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {league.status === "drafting" ? "Re-randomize draft order" : "Start draft"}
                 </button>
@@ -259,7 +252,7 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
                 <input type="hidden" name="leagueId" value={league.id} />
                 <button
                   disabled={!canStartDraft}
-                  className="w-full rounded-[18px] border border-white/10 bg-black/15 px-4 py-3 text-left font-sans text-xs uppercase tracking-[0.16em] text-white disabled:cursor-not-allowed disabled:opacity-50"
+                  className="w-full border-t border-white/10 px-0 py-3 text-left font-sans text-xs uppercase tracking-[0.16em] text-white disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Sync tournament fixtures
                 </button>
@@ -268,12 +261,11 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
                 "Add match result",
                 "Add player stats",
                 "Recalculate scores",
-                "Lock group stage",
-                "Start knockout stage"
+                "Lock group stage"
               ].map((label) => (
                 <button
                   key={label}
-                  className="rounded-[18px] border border-white/10 bg-black/15 px-4 py-3 text-left font-sans text-xs uppercase tracking-[0.16em] text-white opacity-60"
+                  className="border-t border-white/10 px-0 py-3 text-left font-sans text-xs uppercase tracking-[0.16em] text-white opacity-60"
                 >
                   {label}
                 </button>
@@ -284,15 +276,13 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
             ) : null}
           </article>
 
-          <article className="rounded-[28px] border border-[var(--line)] bg-white/6 p-6">
+          <article className="border-t border-[var(--line)] pt-6">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="font-sans text-xs uppercase tracking-[0.18em] text-[var(--gold)]">
                   Stored Fixtures
                 </p>
-                <h2 className="mt-2 font-sans text-3xl uppercase tracking-[0.03em] text-white">
-                  Supabase matches
-                </h2>
+                <h2 className="mt-2 font-sans text-3xl uppercase tracking-[0.03em] text-white">Synced</h2>
               </div>
               <span className="rounded-full border border-white/10 px-3 py-1 font-sans text-[0.68rem] uppercase tracking-[0.18em] text-[var(--muted)]">
                 {storedMatches.length} synced
@@ -300,14 +290,14 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
             </div>
             <div className="mt-4 space-y-3">
               {storedMatches.length === 0 ? (
-                <div className="rounded-[20px] border border-white/10 bg-black/15 p-4 text-sm leading-7 text-[var(--muted)]">
+                <div className="border-t border-white/10 py-4 text-sm leading-7 text-[var(--muted)]">
                   No synced fixtures yet.
                 </div>
               ) : (
                 storedMatches.slice(0, 6).map((match) => (
                   <div
                     key={match.id}
-                    className="rounded-[20px] border border-white/10 bg-black/15 p-4"
+                    className="border-t border-white/10 py-4"
                   >
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <span className="font-sans text-[0.68rem] uppercase tracking-[0.18em] text-[var(--gold)]">
