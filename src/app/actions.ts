@@ -109,13 +109,14 @@ export async function startDraftAction(formData: FormData) {
   } catch (error) {
     redirect(
       buildErrorRedirect(
-        `/leagues/${leagueId}`,
+        `/leagues/${leagueId}/admin`,
         error instanceof Error ? error.message : "Unable to start draft.",
       ),
     );
   }
 
   revalidatePath(`/leagues/${leagueId}`);
+  revalidatePath(`/leagues/${leagueId}/admin`);
   revalidatePath(`/leagues/${leagueId}/draft`);
   redirect(`/leagues/${leagueId}/draft`);
 }
@@ -159,12 +160,13 @@ export async function syncTournamentMatchesAction(formData: FormData) {
   } catch (error) {
     redirect(
       buildErrorRedirect(
-        `/leagues/${leagueId}`,
+        `/leagues/${leagueId}/admin`,
         error instanceof Error ? error.message : "Unable to sync tournament fixtures.",
       ),
     );
   }
 
   revalidatePath(`/leagues/${leagueId}`);
-  redirect(`/leagues/${leagueId}`);
+  revalidatePath(`/leagues/${leagueId}/admin`);
+  redirect(`/leagues/${leagueId}/admin`);
 }

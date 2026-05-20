@@ -2,7 +2,6 @@ import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 import { notFound, redirect } from "next/navigation";
 
-import { startDraftAction, syncTournamentMatchesAction } from "@/app/actions";
 import { CopyInviteLink } from "@/components/copy-invite-link";
 import { getLeagueByIdForUser, getStoredMatches } from "@/lib/db";
 import { getFlagEmojiFromCode, seedTeams } from "@/lib/fantasy-data";
@@ -82,12 +81,22 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
             <span className="rounded-full bg-[var(--pitch)] px-4 py-2 font-sans text-xs uppercase tracking-[0.18em] text-white">
               {league.status.replace("_", " ")}
             </span>
-            <Link
-              href={`/leagues/${league.id}/draft`}
-              className="rounded-full border border-[var(--line-strong)] px-4 py-2 font-sans text-xs uppercase tracking-[0.18em] text-white"
-            >
-              Draft Room
-            </Link>
+            <div className="flex flex-wrap gap-3">
+              {canStartDraft ? (
+                <Link
+                  href={`/leagues/${league.id}/admin`}
+                  className="rounded-full border border-[var(--line-strong)] px-4 py-2 font-sans text-xs uppercase tracking-[0.18em] text-white"
+                >
+                  Admin
+                </Link>
+              ) : null}
+              <Link
+                href={`/leagues/${league.id}/draft`}
+                className="rounded-full border border-[var(--line-strong)] px-4 py-2 font-sans text-xs uppercase tracking-[0.18em] text-white"
+              >
+                Draft Room
+              </Link>
+            </div>
           </div>
           <div className="mt-5 grid gap-4 sm:grid-cols-3">
             <div>
@@ -230,46 +239,24 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
             </div>
           </article>
 
-          <article className="border-t border-[var(--line)] pt-6">
-            <p className="font-sans text-xs uppercase tracking-[0.18em] text-[var(--gold)]">
-              Matchday Controls
-            </p>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <form action={startDraftAction}>
-                <input type="hidden" name="leagueId" value={league.id} />
-                <button
-                  disabled={!canStartDraft}
-                  className="w-full border-t border-white/10 px-0 py-3 text-left font-sans text-xs uppercase tracking-[0.16em] text-white disabled:cursor-not-allowed disabled:opacity-50"
+          {canStartDraft ? (
+            <article className="border-t border-[var(--line)] pt-6">
+              <p className="font-sans text-xs uppercase tracking-[0.18em] text-[var(--gold)]">
+                Commissioner
+              </p>
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-4 border-t border-white/10 py-4">
+                <p className="text-sm leading-7 text-[var(--muted)]">
+                  Run the draft, sync fixtures, and manage matchday from the admin page.
+                </p>
+                <Link
+                  href={`/leagues/${league.id}/admin`}
+                  className="rounded-full border border-[var(--line-strong)] px-4 py-2 font-sans text-xs uppercase tracking-[0.18em] text-white"
                 >
-                  {league.status === "drafting" ? "Re-draw order" : "Start draft"}
-                </button>
-              </form>
-              <form action={syncTournamentMatchesAction}>
-                <input type="hidden" name="leagueId" value={league.id} />
-                <button
-                  disabled={!canStartDraft}
-                  className="w-full border-t border-white/10 px-0 py-3 text-left font-sans text-xs uppercase tracking-[0.16em] text-white disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  Sync fixtures
-                </button>
-              </form>
-              {[
-                "Add match result",
-                "Recalculate scores",
-                "Lock group stage"
-              ].map((label) => (
-                <button
-                  key={label}
-                  className="border-t border-white/10 px-0 py-3 text-left font-sans text-xs uppercase tracking-[0.16em] text-white opacity-60"
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-            {!canStartDraft ? (
-              <p className="mt-3 text-sm text-[var(--muted)]">Commissioner only.</p>
-            ) : null}
-          </article>
+                  Open Admin
+                </Link>
+              </div>
+            </article>
+          ) : null}
 
           <article className="border-t border-[var(--line)] pt-6">
             <div className="flex items-start justify-between gap-4">
