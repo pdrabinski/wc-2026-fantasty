@@ -11,6 +11,7 @@ import {
   joinLeagueForUser,
   startDraftForLeague,
   submitDraftPickForLeague,
+  submitKnockoutPickForLeague,
   syncCurrentUser,
 } from "@/lib/db";
 
@@ -147,6 +148,32 @@ export async function submitDraftPickAction(formData: FormData) {
   revalidatePath(`/leagues/${leagueId}`);
   revalidatePath(`/leagues/${leagueId}/draft`);
   redirect(`/leagues/${leagueId}/draft`);
+}
+
+export async function submitKnockoutPickAction(formData: FormData) {
+  const user = await syncCurrentUser();
+  if (!user) {
+    redirect(buildErrorRedirect("/dashboard", "Sign in before making a bracket pick."));
+  }
+
+  const leagueId = String(formData.get("leagueId") || "");
+  const matchId = String(formData.get("matchId") || "");
+  const pickTeamId = String(formData.get("pickTeamId") || "");
+
+  try {
+    await submitKnockoutPickForLeague(user, leagueId, { matchId, pickTeamId });
+  } catch (error) {
+    redirect(
+      buildErrorRedirect(
+        `/leagues/${leagueId}/bracket`,
+        error instanceof Error ? error.message : "Unable to save bracket pick.",
+      ),
+    );
+  }
+
+  revalidatePath(`/leagues/${leagueId}`);
+  revalidatePath(`/leagues/${leagueId}/bracket`);
+  redirect(`/leagues/${leagueId}/bracket`);
 }
 
 export async function syncTournamentMatchesAction(formData: FormData) {

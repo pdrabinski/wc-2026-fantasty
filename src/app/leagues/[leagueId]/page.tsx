@@ -49,6 +49,8 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
       };
     })
     .sort((left, right) => right.totalPoints - left.totalPoints);
+  const groupChampion = league.scores.group[0];
+  const knockoutChampion = league.scores.knockout[0];
 
   function formatStageLabel(value: string) {
     return value
@@ -93,6 +95,12 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
               {league.status.replace("_", " ")}
             </span>
             <div className="flex flex-wrap gap-3">
+              <Link
+                href={`/leagues/${league.id}/bracket`}
+                className="rounded-full border border-[var(--line-strong)] px-4 py-2 font-sans text-xs uppercase tracking-[0.18em] text-white"
+              >
+                Bracket
+              </Link>
               {canStartDraft ? (
                 <Link
                   href={`/leagues/${league.id}/admin`}
@@ -131,19 +139,44 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
             </div>
           </div>
 
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <div className="border-t border-white/10 py-3">
+              <p className="font-sans text-[0.68rem] uppercase tracking-[0.18em] text-[var(--muted)]">
+                Group Stage Champion
+              </p>
+              <p className="mt-2 text-lg text-white">
+                {league.members.find((member) => member.userId === groupChampion?.userId)?.displayName || "TBD"}
+              </p>
+            </div>
+            <div className="border-t border-white/10 py-3">
+              <p className="font-sans text-[0.68rem] uppercase tracking-[0.18em] text-[var(--muted)]">
+                Knockout Champion
+              </p>
+              <p className="mt-2 text-lg text-white">
+                {league.members.find((member) => member.userId === knockoutChampion?.userId)?.displayName || "TBD"}
+              </p>
+            </div>
+          </div>
+
           <div className="mt-5 overflow-hidden border-t border-white/10">
             <table className="min-w-full border-collapse text-left text-sm">
               <thead className="font-sans uppercase tracking-[0.18em] text-[var(--muted)]">
                 <tr>
                   <th className="px-4 py-3">Manager</th>
-                  <th className="px-4 py-3">Points</th>
+                  <th className="px-4 py-3">Group</th>
+                  <th className="px-4 py-3">Bracket</th>
+                  <th className="px-4 py-3">Total</th>
                 </tr>
               </thead>
               <tbody>
                 {standings.map((entry) => {
+                  const groupScore = league.scores.group.find((score) => score.userId === entry.userId);
+                  const knockoutScore = league.scores.knockout.find((score) => score.userId === entry.userId);
                   return (
                     <tr key={entry.userId} className="border-t border-white/10">
                       <td className="px-4 py-4">{entry.displayName}</td>
+                      <td className="px-4 py-4">{groupScore?.totalPoints ?? 0}</td>
+                      <td className="px-4 py-4">{knockoutScore?.totalPoints ?? 0}</td>
                       <td className="px-4 py-4 font-semibold">{entry.totalPoints}</td>
                     </tr>
                   );
@@ -250,7 +283,7 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
               </p>
               <div className="mt-4 flex flex-wrap items-center justify-between gap-4 border-t border-white/10 py-4">
                 <p className="text-sm leading-7 text-[var(--muted)]">
-                  Run the draft, sync fixtures, and manage matchday from the admin page.
+                  Run the draft, sync fixtures and results, and oversee the group-stage and knockout races from admin.
                 </p>
                 <Link
                   href={`/leagues/${league.id}/admin`}

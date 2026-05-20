@@ -115,6 +115,8 @@ export type LeagueScore = {
   totalPoints: number;
 };
 
+export type KnockoutStage = "r32" | "r16" | "qf" | "sf" | "final";
+
 export type FantasyLeague = {
   id: string;
   name: string;
@@ -200,6 +202,15 @@ export const scoringDefaults = {
       qf: 8,
       sf: 12,
       champion: 20,
+    },
+  },
+  bracket: {
+    knockout: {
+      r32: 2,
+      r16: 3,
+      qf: 5,
+      sf: 8,
+      final: 13,
     },
   },
   player: {

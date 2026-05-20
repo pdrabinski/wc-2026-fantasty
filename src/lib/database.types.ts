@@ -261,6 +261,36 @@ export type Database = {
         };
         Relationships: [];
       };
+      knockout_picks: {
+        Row: {
+          id: string;
+          league_id: string;
+          user_id: string;
+          match_id: string;
+          pick_team_id: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          league_id: string;
+          user_id: string;
+          match_id: string;
+          pick_team_id: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          league_id?: string;
+          user_id?: string;
+          match_id?: string;
+          pick_team_id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

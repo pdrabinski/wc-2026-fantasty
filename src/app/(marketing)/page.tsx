@@ -48,8 +48,8 @@ export default async function MarketingHome() {
             </h1>
             <p className="mt-5 max-w-2xl text-base text-[var(--muted)]">
               {signedIn
-                ? "Your table, fixtures, and squad are ready."
-                : "Create a league, draft your pool, and chase the trophy."}
+                ? "Your table, fixtures, and bracket are ready."
+                : "Draft the group stage, then pick the knockout bracket."}
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">

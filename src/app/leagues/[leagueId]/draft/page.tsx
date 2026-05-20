@@ -127,7 +127,7 @@ export default async function DraftPage({ params, searchParams }: DraftPageProps
                 <h2 className="mt-2 font-sans text-3xl uppercase tracking-[0.03em] text-white">Teams</h2>
               </div>
               <span className="rounded-full border border-white/10 px-4 py-2 font-sans text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
-                5 team draft
+                5 team group-stage draft
               </span>
             </div>
 

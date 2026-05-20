@@ -1,6 +1,7 @@
 import { currentUser } from "@clerk/nextjs/server";
 
 import {
+  scoringDefaults,
   seedPlayers,
   seedTeams,
   type DraftPick,
@@ -8,6 +9,7 @@ import {
   type LeagueMember,
   type LeagueScore,
   type LeagueStatus,
+  type KnockoutStage,
   type RosterEntry,
   type ScorePhase,
 } from "@/lib/fantasy-data";
@@ -101,7 +103,15 @@ type MatchRow = {
   status: "scheduled" | "completed";
 };
 
-type MatchStage = MatchRow["stage"];
+type KnockoutPickRow = {
+  id: string;
+  league_id: string;
+  user_id: string;
+  match_id: string;
+  pick_team_id: string;
+  created_at: string;
+  updated_at: string;
+};
 
 export type DashboardLeague = {
   id: string;
@@ -137,6 +147,26 @@ export type StoredMatch = {
   awayCode?: string;
   homeScore: number | null;
   awayScore: number | null;
+};
+
+export type BracketMatch = {
+  id: string;
+  stage: KnockoutStage;
+  kickoffAt: string;
+  status: "scheduled" | "completed";
+  homeTeamId: string;
+  awayTeamId: string;
+  homeTeam: string;
+  awayTeam: string;
+  homeCode?: string;
+  awayCode?: string;
+  homeScore: number | null;
+  awayScore: number | null;
+  winningTeamId?: string;
+  currentUserPickTeamId?: string;
+  currentUserPickLabel?: string;
+  homePickedCount: number;
+  awayPickedCount: number;
 };
 
 function createInviteCode() {
@@ -322,20 +352,24 @@ function normalizeMatchStatus(match: TournamentMatch): MatchRow["status"] {
   return match.status === "FINISHED" ? "completed" : "scheduled";
 }
 
-function getKnockoutBonusStage(stage: MatchStage): "r16" | "qf" | "sf" | "champion" | undefined {
-  if (stage === "r16") {
-    return "r16";
+function getWinningTeamId(match: MatchRow) {
+  if (match.home_score === null || match.away_score === null) {
+    return undefined;
   }
-  if (stage === "qf") {
-    return "qf";
+
+  if (match.home_score > match.away_score) {
+    return match.home_team_id;
   }
-  if (stage === "sf") {
-    return "sf";
+
+  if (match.away_score > match.home_score) {
+    return match.away_team_id;
   }
-  if (stage === "final") {
-    return "champion";
-  }
+
   return undefined;
+}
+
+function getBracketStagePoints(stage: KnockoutStage) {
+  return scoringDefaults.bracket.knockout[stage];
 }
 
 function findSeedTeamByReference(team: TournamentTeam) {
@@ -432,6 +466,94 @@ export async function getStoredMatches() {
     homeScore: match.home_score,
     awayScore: match.away_score,
   }));
+}
+
+export async function getBracketMatchesForLeague(clerkUserId: string, leagueId: string) {
+  if (!hasSupabaseEnv) {
+    return [] as BracketMatch[];
+  }
+
+  const supabase = getSupabaseServerClient();
+  const { data: appUser, error: appUserError } = await supabase
+    .from("users")
+    .select("*")
+    .eq("clerk_user_id", clerkUserId)
+    .maybeSingle<AppUserRow>();
+
+  if (appUserError || !appUser) {
+    return [] as BracketMatch[];
+  }
+
+  const { data: membership, error: membershipError } = await supabase
+    .from("league_members")
+    .select("id")
+    .eq("league_id", leagueId)
+    .eq("user_id", appUser.id)
+    .maybeSingle();
+
+  if (membershipError || !membership) {
+    return [] as BracketMatch[];
+  }
+
+  const [
+    { data: matchRows, error: matchError },
+    { data: teamRows, error: teamError },
+    { data: pickRows, error: pickError },
+  ] = await Promise.all([
+    supabase
+      .from("matches")
+      .select("*")
+      .neq("stage", "group")
+      .order("kickoff_at", { ascending: true }),
+    supabase.from("teams").select("*"),
+    supabase.from("knockout_picks").select("*").eq("league_id", leagueId),
+  ]);
+
+  if (matchError || teamError || pickError || !matchRows || !teamRows || !pickRows) {
+    throw new Error(
+      matchError?.message || teamError?.message || pickError?.message || "Unable to load bracket.",
+    );
+  }
+
+  const teams = new Map((teamRows as TeamRow[]).map((team) => [team.id, team]));
+  const picks = pickRows as KnockoutPickRow[];
+
+  return (matchRows as MatchRow[]).map((match) => {
+    const homeTeam = teams.get(match.home_team_id);
+    const awayTeam = teams.get(match.away_team_id);
+    const currentUserPick = picks.find(
+      (pick) => pick.match_id === match.id && pick.user_id === appUser.id,
+    );
+    const homePickedCount = picks.filter(
+      (pick) => pick.match_id === match.id && pick.pick_team_id === match.home_team_id,
+    ).length;
+    const awayPickedCount = picks.filter(
+      (pick) => pick.match_id === match.id && pick.pick_team_id === match.away_team_id,
+    ).length;
+    const winningTeamId = getWinningTeamId(match);
+
+    return {
+      id: match.id,
+      stage: match.stage as KnockoutStage,
+      kickoffAt: match.kickoff_at,
+      status: match.status,
+      homeTeamId: match.home_team_id,
+      awayTeamId: match.away_team_id,
+      homeTeam: homeTeam?.name || match.home_team_id,
+      awayTeam: awayTeam?.name || match.away_team_id,
+      homeCode: homeTeam?.country_code,
+      awayCode: awayTeam?.country_code,
+      homeScore: match.home_score,
+      awayScore: match.away_score,
+      winningTeamId,
+      currentUserPickTeamId: currentUserPick?.pick_team_id,
+      currentUserPickLabel: currentUserPick
+        ? teams.get(currentUserPick.pick_team_id)?.name || currentUserPick.pick_team_id
+        : undefined,
+      homePickedCount,
+      awayPickedCount,
+    } satisfies BracketMatch;
+  });
 }
 
 export async function syncTournamentMatchesForLeague(user: CurrentAppUser, leagueId: string) {
@@ -561,23 +683,36 @@ export async function recalculateLeagueScoresForLeague(user: CurrentAppUser, lea
     { data: memberRows, error: memberError },
     { data: rosterRows, error: rosterError },
     { data: matchRows, error: matchError },
+    { data: knockoutPickRows, error: knockoutPickError },
   ] = await Promise.all([
     supabase.from("league_members").select("*").eq("league_id", leagueId),
     supabase.from("rosters").select("*").eq("league_id", leagueId).eq("roster_type", "team"),
     supabase.from("matches").select("*").eq("status", "completed"),
+    supabase.from("knockout_picks").select("*").eq("league_id", leagueId),
   ]);
 
-  if (memberError || rosterError || matchError || !memberRows || !rosterRows || !matchRows) {
+  if (
+    memberError ||
+    rosterError ||
+    matchError ||
+    knockoutPickError ||
+    !memberRows ||
+    !rosterRows ||
+    !matchRows ||
+    !knockoutPickRows
+  ) {
     throw new Error(
       memberError?.message ||
         rosterError?.message ||
         matchError?.message ||
+        knockoutPickError?.message ||
         "Unable to load league scoring data.",
     );
   }
 
   const teamRosterRows = rosterRows as RosterRow[];
   const completedMatches = matchRows as MatchRow[];
+  const knockoutPicks = knockoutPickRows as KnockoutPickRow[];
 
   const scoreMap = new Map<
     string,
@@ -598,7 +733,8 @@ export async function recalculateLeagueScoresForLeague(user: CurrentAppUser, lea
         .map((entry) => entry.team_id as string),
     );
 
-    for (const match of completedMatches) {
+    const groupMatches = completedMatches.filter((match) => match.stage === "group");
+    for (const match of groupMatches) {
       const isHomeTeam = rosteredTeamIds.has(match.home_team_id);
       const isAwayTeam = rosteredTeamIds.has(match.away_team_id);
 
@@ -616,15 +752,10 @@ export async function recalculateLeagueScoresForLeague(user: CurrentAppUser, lea
 
       const result =
         teamScore > opponentScore ? "win" : teamScore === opponentScore ? "draw" : "loss";
-      const phase = match.stage === "group" ? "group" : "knockout";
       const basePoints = calculateTeamFantasyPoints({
         result,
         cleanSheet: opponentScore === 0,
         goalDifferential: Math.max(teamScore - opponentScore, 0),
-        knockoutAdvanceStage:
-          phase === "knockout" && result === "win"
-            ? getKnockoutBonusStage(match.stage)
-            : undefined,
       });
 
       const existing = scoreMap.get(member.user_id);
@@ -632,7 +763,27 @@ export async function recalculateLeagueScoresForLeague(user: CurrentAppUser, lea
         continue;
       }
 
-      existing[phase] += basePoints;
+      existing.group += basePoints;
+    }
+
+    const memberKnockoutPicks = knockoutPicks.filter((pick) => pick.user_id === member.user_id);
+    for (const pick of memberKnockoutPicks) {
+      const match = completedMatches.find((entry) => entry.id === pick.match_id);
+      if (!match || match.stage === "group") {
+        continue;
+      }
+
+      const winnerTeamId = getWinningTeamId(match);
+      if (!winnerTeamId || winnerTeamId !== pick.pick_team_id) {
+        continue;
+      }
+
+      const existing = scoreMap.get(member.user_id);
+      if (!existing) {
+        continue;
+      }
+
+      existing.knockout += getBracketStagePoints(match.stage);
     }
   }
 
@@ -690,6 +841,64 @@ export async function recalculateLeagueScoresForLeague(user: CurrentAppUser, lea
 export async function syncTournamentResultsForLeague(user: CurrentAppUser, leagueId: string) {
   await syncTournamentMatchesForLeague(user, leagueId);
   return recalculateLeagueScoresForLeague(user, leagueId);
+}
+
+export async function submitKnockoutPickForLeague(
+  user: CurrentAppUser,
+  leagueId: string,
+  input: { matchId: string; pickTeamId: string },
+) {
+  const supabase = getSupabaseServerClient();
+
+  const [
+    { data: membership, error: membershipError },
+    { data: match, error: matchError },
+  ] = await Promise.all([
+    supabase
+      .from("league_members")
+      .select("id")
+      .eq("league_id", leagueId)
+      .eq("user_id", user.id)
+      .maybeSingle(),
+    supabase.from("matches").select("*").eq("id", input.matchId).maybeSingle<MatchRow>(),
+  ]);
+
+  if (membershipError || !membership) {
+    throw new Error("You are not a member of this league.");
+  }
+
+  if (matchError || !match) {
+    throw new Error("Knockout match not found.");
+  }
+
+  if (match.stage === "group") {
+    throw new Error("Bracket picks open after the group stage.");
+  }
+
+  if (match.status === "completed") {
+    throw new Error("This match is already final.");
+  }
+
+  if (![match.home_team_id, match.away_team_id].includes(input.pickTeamId)) {
+    throw new Error("Pick must match one of the teams in this fixture.");
+  }
+
+  const { error: upsertError } = await supabase.from("knockout_picks").upsert(
+    [
+      {
+        league_id: leagueId,
+        user_id: user.id,
+        match_id: input.matchId,
+        pick_team_id: input.pickTeamId,
+        updated_at: new Date().toISOString(),
+      },
+    ],
+    { onConflict: "league_id,user_id,match_id" },
+  );
+
+  if (upsertError) {
+    throw new Error(upsertError.message);
+  }
 }
 
 export async function createLeagueForUser(user: CurrentAppUser, input: { name: string; maxMembers: number }) {

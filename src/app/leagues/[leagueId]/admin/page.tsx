@@ -78,7 +78,7 @@ export default async function LeagueAdminPage({
             {league.name}
           </h1>
           <p className="mt-4 max-w-2xl text-sm leading-7 text-[var(--muted)]">
-            Run the draft, sync fixtures, and manage matchday from one place.
+            Run the draft, sync fixtures and results, and manage the handoff from group-stage draft scoring to knockout bracket scoring.
           </p>
         </section>
 
@@ -149,9 +149,12 @@ export default async function LeagueAdminPage({
                 Recalculate table
               </button>
             </form>
-            <button className="border-t border-white/10 px-0 py-3 text-left font-sans text-xs uppercase tracking-[0.16em] text-white opacity-60">
-              Lock group stage
-            </button>
+            <Link
+              href={`/leagues/${league.id}/bracket`}
+              className="border-t border-white/10 px-0 py-3 text-left font-sans text-xs uppercase tracking-[0.16em] text-white"
+            >
+              Open bracket page
+            </Link>
           </div>
         </article>
 

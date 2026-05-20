@@ -129,10 +129,22 @@ create table if not exists league_scores (
   unique (league_id, user_id, phase)
 );
 
+create table if not exists knockout_picks (
+  id uuid primary key default gen_random_uuid(),
+  league_id uuid not null references leagues(id) on delete cascade,
+  user_id uuid not null references users(id) on delete cascade,
+  match_id uuid not null references matches(id) on delete cascade,
+  pick_team_id text not null references teams(id),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (league_id, user_id, match_id)
+);
+
 create index if not exists league_members_league_idx on league_members (league_id);
 create index if not exists draft_picks_league_idx on draft_picks (league_id, pick_number);
 create index if not exists rosters_league_user_idx on rosters (league_id, user_id);
 create index if not exists league_scores_league_phase_idx on league_scores (league_id, phase);
+create index if not exists knockout_picks_league_user_idx on knockout_picks (league_id, user_id);
 
 insert into teams (id, name, country_code, tier, group_name, flag_url)
 values
