@@ -2,7 +2,12 @@ import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 import { notFound, redirect } from "next/navigation";
 
-import { startDraftAction, syncTournamentMatchesAction } from "@/app/actions";
+import {
+  recalculateLeagueScoresAction,
+  startDraftAction,
+  syncTournamentMatchesAction,
+  syncTournamentResultsAction,
+} from "@/app/actions";
 import { CopyInviteLink } from "@/components/copy-invite-link";
 import { getLeagueByIdForUser, getStoredMatches } from "@/lib/db";
 import { getFlagEmojiFromCode, seedTeams } from "@/lib/fantasy-data";
@@ -132,14 +137,21 @@ export default async function LeagueAdminPage({
                 Sync fixtures
               </button>
             </form>
-            {["Sync results", "Recalculate table", "Lock group stage"].map((label) => (
-              <button
-                key={label}
-                className="border-t border-white/10 px-0 py-3 text-left font-sans text-xs uppercase tracking-[0.16em] text-white opacity-60"
-              >
-                {label}
+            <form action={syncTournamentResultsAction}>
+              <input type="hidden" name="leagueId" value={league.id} />
+              <button className="w-full border-t border-white/10 px-0 py-3 text-left font-sans text-xs uppercase tracking-[0.16em] text-white">
+                Sync results
               </button>
-            ))}
+            </form>
+            <form action={recalculateLeagueScoresAction}>
+              <input type="hidden" name="leagueId" value={league.id} />
+              <button className="w-full border-t border-white/10 px-0 py-3 text-left font-sans text-xs uppercase tracking-[0.16em] text-white">
+                Recalculate table
+              </button>
+            </form>
+            <button className="border-t border-white/10 px-0 py-3 text-left font-sans text-xs uppercase tracking-[0.16em] text-white opacity-60">
+              Lock group stage
+            </button>
           </div>
         </article>
 

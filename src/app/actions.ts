@@ -5,7 +5,9 @@ import { redirect } from "next/navigation";
 
 import {
   createLeagueForUser,
+  recalculateLeagueScoresForLeague,
   syncTournamentMatchesForLeague,
+  syncTournamentResultsForLeague,
   joinLeagueForUser,
   startDraftForLeague,
   submitDraftPickForLeague,
@@ -162,6 +164,54 @@ export async function syncTournamentMatchesAction(formData: FormData) {
       buildErrorRedirect(
         `/leagues/${leagueId}/admin`,
         error instanceof Error ? error.message : "Unable to sync tournament fixtures.",
+      ),
+    );
+  }
+
+  revalidatePath(`/leagues/${leagueId}`);
+  revalidatePath(`/leagues/${leagueId}/admin`);
+  redirect(`/leagues/${leagueId}/admin`);
+}
+
+export async function syncTournamentResultsAction(formData: FormData) {
+  const user = await syncCurrentUser();
+  if (!user) {
+    redirect(buildErrorRedirect("/dashboard", "Sign in before syncing results."));
+  }
+
+  const leagueId = String(formData.get("leagueId") || "");
+
+  try {
+    await syncTournamentResultsForLeague(user, leagueId);
+  } catch (error) {
+    redirect(
+      buildErrorRedirect(
+        `/leagues/${leagueId}/admin`,
+        error instanceof Error ? error.message : "Unable to sync tournament results.",
+      ),
+    );
+  }
+
+  revalidatePath(`/leagues/${leagueId}`);
+  revalidatePath(`/leagues/${leagueId}/admin`);
+  redirect(`/leagues/${leagueId}/admin`);
+}
+
+export async function recalculateLeagueScoresAction(formData: FormData) {
+  const user = await syncCurrentUser();
+  if (!user) {
+    redirect(buildErrorRedirect("/dashboard", "Sign in before recalculating scores."));
+  }
+
+  const leagueId = String(formData.get("leagueId") || "");
+
+  try {
+    await recalculateLeagueScoresForLeague(user, leagueId);
+  } catch (error) {
+    redirect(
+      buildErrorRedirect(
+        `/leagues/${leagueId}/admin`,
+        error instanceof Error ? error.message : "Unable to recalculate league scores.",
       ),
     );
   }

@@ -11,6 +11,7 @@ import {
   type RosterEntry,
   type ScorePhase,
 } from "@/lib/fantasy-data";
+import { calculateTeamFantasyPoints } from "@/lib/fantasy-engine";
 import { hasSupabaseEnv } from "@/lib/env";
 import { getSupabaseServerClient } from "@/lib/supabase";
 import { getTournamentDataSnapshot, type TournamentMatch, type TournamentTeam } from "@/lib/world-cup-data";
@@ -99,6 +100,8 @@ type MatchRow = {
   away_score: number | null;
   status: "scheduled" | "completed";
 };
+
+type MatchStage = MatchRow["stage"];
 
 export type DashboardLeague = {
   id: string;
@@ -319,6 +322,22 @@ function normalizeMatchStatus(match: TournamentMatch): MatchRow["status"] {
   return match.status === "FINISHED" ? "completed" : "scheduled";
 }
 
+function getKnockoutBonusStage(stage: MatchStage): "r16" | "qf" | "sf" | "champion" | undefined {
+  if (stage === "r16") {
+    return "r16";
+  }
+  if (stage === "qf") {
+    return "qf";
+  }
+  if (stage === "sf") {
+    return "sf";
+  }
+  if (stage === "final") {
+    return "champion";
+  }
+  return undefined;
+}
+
 function findSeedTeamByReference(team: TournamentTeam) {
   return seedTeams.find(
     (seed) =>
@@ -520,6 +539,157 @@ export async function syncTournamentMatchesForLeague(user: CurrentAppUser, leagu
     updated: updates.length,
     provider: snapshot.provider.label,
   };
+}
+
+export async function recalculateLeagueScoresForLeague(user: CurrentAppUser, leagueId: string) {
+  const supabase = getSupabaseServerClient();
+  const { data: league, error: leagueError } = await supabase
+    .from("leagues")
+    .select("*")
+    .eq("id", leagueId)
+    .maybeSingle<LeagueRow>();
+
+  if (leagueError || !league) {
+    throw new Error("League not found.");
+  }
+
+  if (league.commissioner_user_id !== user.id) {
+    throw new Error("Only the commissioner can recalculate scores.");
+  }
+
+  const [
+    { data: memberRows, error: memberError },
+    { data: rosterRows, error: rosterError },
+    { data: matchRows, error: matchError },
+  ] = await Promise.all([
+    supabase.from("league_members").select("*").eq("league_id", leagueId),
+    supabase.from("rosters").select("*").eq("league_id", leagueId).eq("roster_type", "team"),
+    supabase.from("matches").select("*").eq("status", "completed"),
+  ]);
+
+  if (memberError || rosterError || matchError || !memberRows || !rosterRows || !matchRows) {
+    throw new Error(
+      memberError?.message ||
+        rosterError?.message ||
+        matchError?.message ||
+        "Unable to load league scoring data.",
+    );
+  }
+
+  const teamRosterRows = rosterRows as RosterRow[];
+  const completedMatches = matchRows as MatchRow[];
+
+  const scoreMap = new Map<
+    string,
+    {
+      group: number;
+      knockout: number;
+    }
+  >();
+
+  (memberRows as LeagueMemberRow[]).forEach((member) => {
+    scoreMap.set(member.user_id, { group: 0, knockout: 0 });
+  });
+
+  for (const member of memberRows as LeagueMemberRow[]) {
+    const rosteredTeamIds = new Set(
+      teamRosterRows
+        .filter((entry) => entry.user_id === member.user_id && entry.team_id)
+        .map((entry) => entry.team_id as string),
+    );
+
+    for (const match of completedMatches) {
+      const isHomeTeam = rosteredTeamIds.has(match.home_team_id);
+      const isAwayTeam = rosteredTeamIds.has(match.away_team_id);
+
+      if (!isHomeTeam && !isAwayTeam) {
+        continue;
+      }
+
+      const teamIsHome = isHomeTeam;
+      const teamScore = teamIsHome ? match.home_score : match.away_score;
+      const opponentScore = teamIsHome ? match.away_score : match.home_score;
+
+      if (teamScore === null || opponentScore === null) {
+        continue;
+      }
+
+      const result =
+        teamScore > opponentScore ? "win" : teamScore === opponentScore ? "draw" : "loss";
+      const phase = match.stage === "group" ? "group" : "knockout";
+      const basePoints = calculateTeamFantasyPoints({
+        result,
+        cleanSheet: opponentScore === 0,
+        goalDifferential: Math.max(teamScore - opponentScore, 0),
+        knockoutAdvanceStage:
+          phase === "knockout" && result === "win"
+            ? getKnockoutBonusStage(match.stage)
+            : undefined,
+      });
+
+      const existing = scoreMap.get(member.user_id);
+      if (!existing) {
+        continue;
+      }
+
+      existing[phase] += basePoints;
+    }
+  }
+
+  const payload = Array.from(scoreMap.entries()).flatMap(([userId, points]) => [
+    {
+      league_id: leagueId,
+      user_id: userId,
+      phase: "group" as ScorePhase,
+      team_points: points.group,
+      player_points: 0,
+      total_points: points.group,
+    },
+    {
+      league_id: leagueId,
+      user_id: userId,
+      phase: "knockout" as ScorePhase,
+      team_points: points.knockout,
+      player_points: 0,
+      total_points: points.knockout,
+    },
+  ]);
+
+  const { error: upsertError } = await supabase.from("league_scores").upsert(payload, {
+    onConflict: "league_id,user_id,phase",
+  });
+
+  if (upsertError) {
+    throw new Error(upsertError.message);
+  }
+
+  const nextStatus: LeagueStatus =
+    completedMatches.some((match) => match.stage !== "group")
+      ? "knockout_stage"
+      : completedMatches.some((match) => match.stage === "group")
+        ? "group_stage"
+        : league.status;
+
+  if (nextStatus !== league.status) {
+    const { error: updateLeagueError } = await supabase
+      .from("leagues")
+      .update({ status: nextStatus })
+      .eq("id", leagueId);
+
+    if (updateLeagueError) {
+      throw new Error(updateLeagueError.message);
+    }
+  }
+
+  return {
+    updatedManagers: scoreMap.size,
+    completedMatches: completedMatches.length,
+  };
+}
+
+export async function syncTournamentResultsForLeague(user: CurrentAppUser, leagueId: string) {
+  await syncTournamentMatchesForLeague(user, leagueId);
+  return recalculateLeagueScoresForLeague(user, leagueId);
 }
 
 export async function createLeagueForUser(user: CurrentAppUser, input: { name: string; maxMembers: number }) {

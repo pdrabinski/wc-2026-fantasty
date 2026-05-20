@@ -2,7 +2,6 @@ import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 import { notFound, redirect } from "next/navigation";
 
-import { CopyInviteLink } from "@/components/copy-invite-link";
 import { getLeagueByIdForUser, getStoredMatches } from "@/lib/db";
 import { getFlagEmojiFromCode, seedTeams } from "@/lib/fantasy-data";
 import { getTournamentDataSnapshot } from "@/lib/world-cup-data";
@@ -38,6 +37,18 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
 
   const canStartDraft = league.currentUserId === league.commissionerUserId;
   const teamCodeById = new Map(seedTeams.map((team) => [team.id, team.countryCode]));
+  const standings = league.members
+    .map((member) => {
+      const groupScore = league.scores.group.find((score) => score.userId === member.userId);
+      const knockoutScore = league.scores.knockout.find((score) => score.userId === member.userId);
+
+      return {
+        userId: member.userId,
+        displayName: member.displayName,
+        totalPoints: (groupScore?.totalPoints ?? 0) + (knockoutScore?.totalPoints ?? 0),
+      };
+    })
+    .sort((left, right) => right.totalPoints - left.totalPoints);
 
   function formatStageLabel(value: string) {
     return value
@@ -98,13 +109,7 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
               </Link>
             </div>
           </div>
-          <div className="mt-5 grid gap-4 sm:grid-cols-3">
-            <div>
-              <p className="font-sans text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
-                Invite link
-              </p>
-              <CopyInviteLink href={`https://wc-2026-fantasty.vercel.app${league.inviteLink}`} />
-            </div>
+          <div className="mt-5 grid gap-4 sm:grid-cols-2">
             <div>
               <p className="font-sans text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
                 Commissioner
@@ -135,12 +140,11 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
                 </tr>
               </thead>
               <tbody>
-                {league.scores.group.map((score) => {
-                  const member = league.members.find((entry) => entry.userId === score.userId);
+                {standings.map((entry) => {
                   return (
-                    <tr key={score.userId} className="border-t border-white/10">
-                      <td className="px-4 py-4">{member?.displayName}</td>
-                      <td className="px-4 py-4 font-semibold">{score.totalPoints}</td>
+                    <tr key={entry.userId} className="border-t border-white/10">
+                      <td className="px-4 py-4">{entry.displayName}</td>
+                      <td className="px-4 py-4 font-semibold">{entry.totalPoints}</td>
                     </tr>
                   );
                 })}

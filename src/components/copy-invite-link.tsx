@@ -27,11 +27,8 @@ export function CopyInviteLink({ href }: CopyInviteLinkProps) {
         className="text-left text-base text-white underline decoration-white/35 underline-offset-4 transition hover:decoration-white"
         title="Click to copy invite link"
       >
-        {href}
-      </button>
-      <p className="mt-2 text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
         {copied ? "Copied" : "Click to copy"}
-      </p>
+      </button>
     </div>
   );
 }
