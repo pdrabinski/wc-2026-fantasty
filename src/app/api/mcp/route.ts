@@ -1,4 +1,3 @@
-import { verifyClerkToken } from "@clerk/mcp-tools/next";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
@@ -53,6 +52,35 @@ function getBearerToken(req: NextRequest) {
   return authorization.slice("Bearer ".length).trim() || null;
 }
 
+function getOAuthAuthInfo(
+  authState: {
+    isAuthenticated: boolean;
+    userId: string | null;
+    clientId?: string | null;
+    scopes?: string[] | null;
+  },
+  token: string | null,
+) {
+  if (!token || !authState.isAuthenticated) {
+    return undefined;
+  }
+
+  const clientId = "clientId" in authState ? authState.clientId : undefined;
+  const userId = authState.userId ?? undefined;
+  const scopes = "scopes" in authState && Array.isArray(authState.scopes) ? authState.scopes : [];
+
+  if (!clientId || !userId) {
+    return undefined;
+  }
+
+  return {
+    token,
+    clientId,
+    scopes,
+    extra: { userId },
+  };
+}
+
 function unauthorizedResponse() {
   return NextResponse.json(
     {
@@ -82,8 +110,7 @@ async function handleMcpRequest(req: NextRequest) {
   const bearerToken = getBearerToken(req);
   const oauthAuthState =
     context.tokenType === "oauth_token" ? await auth({ acceptsToken: "oauth_token" }) : null;
-  const authInfo =
-    oauthAuthState && bearerToken ? verifyClerkToken(oauthAuthState, bearerToken) : undefined;
+  const authInfo = oauthAuthState ? getOAuthAuthInfo(oauthAuthState, bearerToken) : undefined;
 
   try {
     await server.connect(transport);
