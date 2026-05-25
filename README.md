@@ -36,6 +36,14 @@ Auth:
 - Accepts Clerk `session_token` requests
 - Accepts Clerk `oauth_token` requests
 - Uses Clerk server-side verification in the route handler before any tool runs
+- Exposes OAuth discovery metadata at:
+  - `/.well-known/oauth-protected-resource`
+  - `/.well-known/oauth-authorization-server`
+
+OAuth discovery:
+- The protected resource metadata now points clients at the real MCP endpoint: `/api/mcp`
+- Clerk remains the authorization server
+- MCP clients can discover the OAuth server from the app directly instead of being configured manually
 
 Current MCP tools:
 - `whoami`

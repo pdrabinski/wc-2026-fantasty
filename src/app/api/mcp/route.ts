@@ -1,3 +1,4 @@
+import { verifyClerkToken } from "@clerk/mcp-tools/next";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
@@ -42,6 +43,16 @@ async function getMcpUserContext() {
   };
 }
 
+function getBearerToken(req: NextRequest) {
+  const authorization = req.headers.get("authorization");
+
+  if (!authorization?.startsWith("Bearer ")) {
+    return null;
+  }
+
+  return authorization.slice("Bearer ".length).trim() || null;
+}
+
 function unauthorizedResponse() {
   return NextResponse.json(
     {
@@ -68,11 +79,16 @@ async function handleMcpRequest(req: NextRequest) {
     sessionIdGenerator: undefined,
     enableJsonResponse: true,
   });
+  const bearerToken = getBearerToken(req);
+  const oauthAuthState =
+    context.tokenType === "oauth_token" ? await auth({ acceptsToken: "oauth_token" }) : null;
+  const authInfo =
+    oauthAuthState && bearerToken ? verifyClerkToken(oauthAuthState, bearerToken) : undefined;
 
   try {
     await server.connect(transport);
     const parsedBody = req.method === "POST" ? await req.json().catch(() => undefined) : undefined;
-    return await transport.handleRequest(req, { parsedBody });
+    return await transport.handleRequest(req, { parsedBody, authInfo });
   } catch (error) {
     console.error("MCP route error:", error);
     return NextResponse.json(
