@@ -4,7 +4,7 @@ import { notFound, redirect } from "next/navigation";
 
 import { submitKnockoutPickAction } from "@/app/actions";
 import { getBracketMatchesForLeague, getLeagueByIdForUser } from "@/lib/db";
-import { getFlagEmojiFromCode } from "@/lib/fantasy-data";
+import { getFlagEmojiFromCode, scoringDefaults, type KnockoutStage } from "@/lib/fantasy-data";
 
 export const dynamic = "force-dynamic";
 
@@ -24,8 +24,10 @@ function formatStageLabel(value: string) {
     .replace(/\bR32\b/i, "Round of 32")
     .replace(/\bQF\b/i, "Quarterfinal")
     .replace(/\bSF\b/i, "Semifinal")
-    .replace(/\bFINAL\b/i, "Final");
+      .replace(/\bFINAL\b/i, "Final");
 }
+
+const stageOrder: KnockoutStage[] = ["r32", "r16", "qf", "sf", "final"];
 
 export default async function BracketPage({ params, searchParams }: BracketPageProps) {
   const { userId } = await auth();
@@ -43,6 +45,23 @@ export default async function BracketPage({ params, searchParams }: BracketPageP
   if (!league) {
     notFound();
   }
+
+  const isCommissioner = league.currentUserId === league.commissionerUserId;
+
+  const groupedMatches = stageOrder
+    .map((stage) => ({
+      stage,
+      matches: bracketMatches.filter((match) => match.stage === stage),
+    }))
+    .filter((group) => group.matches.length > 0);
+
+  const picksMade = bracketMatches.filter((match) => match.currentUserPickTeamId).length;
+  const completedPicks = bracketMatches.filter(
+    (match) => match.status === "completed" && match.currentUserPickTeamId,
+  );
+  const correctPicks = completedPicks.filter(
+    (match) => match.currentUserPickTeamId === match.winningTeamId,
+  ).length;
 
   return (
     <main className="mx-auto max-w-7xl px-5 pb-16 pt-8 sm:px-8 lg:px-10">
@@ -71,12 +90,14 @@ export default async function BracketPage({ params, searchParams }: BracketPageP
           >
             Back to league
           </Link>
-          <Link
-            href={`/leagues/${league.id}/admin`}
-            className="rounded-full border border-[var(--line-strong)] px-5 py-3 font-sans text-sm uppercase tracking-[0.18em] text-white"
-          >
-            Commissioner admin
-          </Link>
+          {isCommissioner ? (
+            <Link
+              href={`/leagues/${league.id}/admin`}
+              className="rounded-full border border-[var(--line-strong)] px-5 py-3 font-sans text-sm uppercase tracking-[0.18em] text-white"
+            >
+              Commissioner admin
+            </Link>
+          ) : null}
         </div>
       </div>
 
@@ -95,86 +116,155 @@ export default async function BracketPage({ params, searchParams }: BracketPageP
           </span>
         </div>
 
+        <div className="mt-4 grid gap-4 sm:grid-cols-3">
+          <div className="border-t border-white/10 py-3">
+            <p className="font-sans text-[0.68rem] uppercase tracking-[0.18em] text-[var(--muted)]">
+              Picks Made
+            </p>
+            <p className="mt-2 text-lg text-white">
+              {picksMade} / {bracketMatches.length}
+            </p>
+          </div>
+          <div className="border-t border-white/10 py-3">
+            <p className="font-sans text-[0.68rem] uppercase tracking-[0.18em] text-[var(--muted)]">
+              Correct Picks
+            </p>
+            <p className="mt-2 text-lg text-white">
+              {correctPicks} / {completedPicks.length}
+            </p>
+          </div>
+          <div className="border-t border-white/10 py-3">
+            <p className="font-sans text-[0.68rem] uppercase tracking-[0.18em] text-[var(--muted)]">
+              Live Bracket Points
+            </p>
+            <p className="mt-2 text-lg text-white">
+              {league.scores.knockout.find((score) => score.userId === league.currentUserId)?.totalPoints ?? 0}
+            </p>
+          </div>
+        </div>
+
         <div className="mt-5 space-y-5">
           {bracketMatches.length === 0 ? (
             <div className="border-t border-white/10 py-4 text-sm leading-7 text-[var(--muted)]">
               No knockout fixtures yet. Once they are synced, everyone in the league can make bracket picks here.
             </div>
           ) : (
-            bracketMatches.map((match) => (
-              <article key={match.id} className="border-t border-white/10 py-5">
-                <div className="grid gap-2 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
-                  <span className="font-sans text-[0.68rem] uppercase tracking-[0.18em] text-[var(--gold)]">
-                    {formatStageLabel(match.stage)}
-                  </span>
-                  <span className="text-xs uppercase tracking-[0.18em] text-[var(--muted)] sm:text-center">
-                    {new Date(match.kickoffAt).toLocaleString("en-US", {
-                      dateStyle: "medium",
-                      timeStyle: "short",
-                      timeZone: "America/Denver",
-                    })}
-                  </span>
-                  <span className="hidden sm:block" aria-hidden="true" />
-                </div>
-
-                <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_auto_1fr] lg:items-center">
-                  <form action={submitKnockoutPickAction} className="min-w-0">
-                    <input type="hidden" name="leagueId" value={league.id} />
-                    <input type="hidden" name="matchId" value={match.id} />
-                    <input type="hidden" name="pickTeamId" value={match.homeTeamId} />
-                    <button
-                      disabled={match.status === "completed"}
-                      className={`w-full border-t px-0 py-3 text-left transition disabled:cursor-not-allowed disabled:opacity-60 ${
-                        match.currentUserPickTeamId === match.homeTeamId
-                          ? "border-[var(--gold)] text-white"
-                          : "border-white/10 text-white"
-                      }`}
-                    >
-                      <p className="font-sans text-2xl uppercase tracking-[0.03em]">
-                        {getFlagEmojiFromCode(match.homeCode)} {match.homeTeam}
-                      </p>
-                      <p className="mt-2 text-sm text-[var(--muted)]">
-                        {match.homeCode || "HOME"} · {match.homePickedCount} picks
-                      </p>
-                    </button>
-                  </form>
-
-                  <div className="text-center">
-                    <p className="font-sans text-3xl uppercase tracking-[0.03em] text-white">
-                      {match.homeScore ?? "-"} : {match.awayScore ?? "-"}
+            groupedMatches.map((group) => (
+              <section key={group.stage} className="border-t border-white/10 pt-5">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p className="font-sans text-[0.68rem] uppercase tracking-[0.18em] text-[var(--gold)]">
+                      {formatStageLabel(group.stage)}
                     </p>
-                    <p className="mt-1 text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
-                      {match.status === "completed" ? "Final" : "Pick winner"}
-                    </p>
-                    {match.currentUserPickLabel ? (
-                      <p className="mt-3 text-xs uppercase tracking-[0.18em] text-[var(--gold)]">
-                        Your pick: {match.currentUserPickLabel}
-                      </p>
-                    ) : null}
+                    <h3 className="mt-2 font-sans text-2xl uppercase tracking-[0.03em] text-white">
+                      {group.matches.length} fixtures
+                    </h3>
                   </div>
-
-                  <form action={submitKnockoutPickAction} className="min-w-0">
-                    <input type="hidden" name="leagueId" value={league.id} />
-                    <input type="hidden" name="matchId" value={match.id} />
-                    <input type="hidden" name="pickTeamId" value={match.awayTeamId} />
-                    <button
-                      disabled={match.status === "completed"}
-                      className={`w-full border-t px-0 py-3 text-right transition disabled:cursor-not-allowed disabled:opacity-60 ${
-                        match.currentUserPickTeamId === match.awayTeamId
-                          ? "border-[var(--gold)] text-white"
-                          : "border-white/10 text-white"
-                      }`}
-                    >
-                      <p className="font-sans text-2xl uppercase tracking-[0.03em]">
-                        {getFlagEmojiFromCode(match.awayCode)} {match.awayTeam}
-                      </p>
-                      <p className="mt-2 text-sm text-[var(--muted)]">
-                        {match.awayPickedCount} picks · {match.awayCode || "AWAY"}
-                      </p>
-                    </button>
-                  </form>
+                  <span className="rounded-full border border-white/10 px-3 py-1 font-sans text-[0.68rem] uppercase tracking-[0.18em] text-[var(--muted)]">
+                    {scoringDefaults.bracket.knockout[group.stage]} pts each
+                  </span>
                 </div>
-              </article>
+
+                <div className="mt-4 space-y-5">
+                  {group.matches.map((match) => {
+                    const pickWon =
+                      match.status === "completed" &&
+                      Boolean(match.currentUserPickTeamId) &&
+                      match.currentUserPickTeamId === match.winningTeamId;
+                    const pickLost =
+                      match.status === "completed" &&
+                      Boolean(match.currentUserPickTeamId) &&
+                      Boolean(match.winningTeamId) &&
+                      match.currentUserPickTeamId !== match.winningTeamId;
+
+                    return (
+                      <article key={match.id} className="border-t border-white/10 py-5">
+                        <div className="grid gap-2 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
+                          <span className="font-sans text-[0.68rem] uppercase tracking-[0.18em] text-[var(--gold)]">
+                            {formatStageLabel(match.stage)}
+                          </span>
+                          <span className="text-xs uppercase tracking-[0.18em] text-[var(--muted)] sm:text-center">
+                            {new Date(match.kickoffAt).toLocaleString("en-US", {
+                              dateStyle: "medium",
+                              timeStyle: "short",
+                              timeZone: "America/Denver",
+                            })}
+                          </span>
+                          <span className="hidden sm:block" aria-hidden="true" />
+                        </div>
+
+                        <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_auto_1fr] lg:items-center">
+                          <form action={submitKnockoutPickAction} className="min-w-0">
+                            <input type="hidden" name="leagueId" value={league.id} />
+                            <input type="hidden" name="matchId" value={match.id} />
+                            <input type="hidden" name="pickTeamId" value={match.homeTeamId} />
+                            <button
+                              disabled={match.status === "completed"}
+                              className={`w-full border-t px-0 py-3 text-left transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                                match.currentUserPickTeamId === match.homeTeamId
+                                  ? "border-[var(--gold)] text-white"
+                                  : "border-white/10 text-white"
+                              }`}
+                            >
+                              <p className="font-sans text-2xl uppercase tracking-[0.03em]">
+                                {getFlagEmojiFromCode(match.homeCode)} {match.homeTeam}
+                              </p>
+                              <p className="mt-2 text-sm text-[var(--muted)]">
+                                {match.homeCode || "HOME"} · {match.homePickedCount} picks
+                              </p>
+                            </button>
+                          </form>
+
+                          <div className="text-center">
+                            <p className="font-sans text-3xl uppercase tracking-[0.03em] text-white">
+                              {match.homeScore ?? "-"} : {match.awayScore ?? "-"}
+                            </p>
+                            <p className="mt-1 text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
+                              {match.status === "completed" ? "Final" : "Pick winner"}
+                            </p>
+                            {match.currentUserPickLabel ? (
+                              <p className="mt-3 text-xs uppercase tracking-[0.18em] text-[var(--gold)]">
+                                Your pick: {match.currentUserPickLabel}
+                              </p>
+                            ) : null}
+                            {pickWon ? (
+                              <p className="mt-2 text-xs uppercase tracking-[0.18em] text-[var(--green)]">
+                                Correct pick
+                              </p>
+                            ) : null}
+                            {pickLost ? (
+                              <p className="mt-2 text-xs uppercase tracking-[0.18em] text-[var(--danger)]">
+                                Missed pick
+                              </p>
+                            ) : null}
+                          </div>
+
+                          <form action={submitKnockoutPickAction} className="min-w-0">
+                            <input type="hidden" name="leagueId" value={league.id} />
+                            <input type="hidden" name="matchId" value={match.id} />
+                            <input type="hidden" name="pickTeamId" value={match.awayTeamId} />
+                            <button
+                              disabled={match.status === "completed"}
+                              className={`w-full border-t px-0 py-3 text-right transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                                match.currentUserPickTeamId === match.awayTeamId
+                                  ? "border-[var(--gold)] text-white"
+                                  : "border-white/10 text-white"
+                              }`}
+                            >
+                              <p className="font-sans text-2xl uppercase tracking-[0.03em]">
+                                {getFlagEmojiFromCode(match.awayCode)} {match.awayTeam}
+                              </p>
+                              <p className="mt-2 text-sm text-[var(--muted)]">
+                                {match.awayPickedCount} picks · {match.awayCode || "AWAY"}
+                              </p>
+                            </button>
+                          </form>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              </section>
             ))
           )}
         </div>

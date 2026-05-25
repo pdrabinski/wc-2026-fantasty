@@ -1,18 +1,52 @@
 create extension if not exists pgcrypto;
 
-create type league_status as enum (
-  'pre_draft',
-  'drafting',
-  'group_stage',
-  'knockout_stage',
-  'completed'
-);
+do $$
+begin
+  create type league_status as enum (
+    'pre_draft',
+    'drafting',
+    'group_stage',
+    'knockout_stage',
+    'completed'
+  );
+exception
+  when duplicate_object then null;
+end $$;
 
-create type draft_pick_type as enum ('team', 'player');
-create type roster_type as enum ('team', 'player');
-create type match_stage as enum ('group', 'r32', 'r16', 'qf', 'sf', 'final');
-create type match_status as enum ('scheduled', 'completed');
-create type score_phase as enum ('group', 'knockout');
+do $$
+begin
+  create type draft_pick_type as enum ('team', 'player');
+exception
+  when duplicate_object then null;
+end $$;
+
+do $$
+begin
+  create type roster_type as enum ('team', 'player');
+exception
+  when duplicate_object then null;
+end $$;
+
+do $$
+begin
+  create type match_stage as enum ('group', 'r32', 'r16', 'qf', 'sf', 'final');
+exception
+  when duplicate_object then null;
+end $$;
+
+do $$
+begin
+  create type match_status as enum ('scheduled', 'completed');
+exception
+  when duplicate_object then null;
+end $$;
+
+do $$
+begin
+  create type score_phase as enum ('group', 'knockout');
+exception
+  when duplicate_object then null;
+end $$;
 
 create table if not exists users (
   id uuid primary key default gen_random_uuid(),

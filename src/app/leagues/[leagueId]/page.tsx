@@ -37,6 +37,7 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
 
   const canStartDraft = league.currentUserId === league.commissionerUserId;
   const teamCodeById = new Map(seedTeams.map((team) => [team.id, team.countryCode]));
+  const hasKnockoutFixtures = storedMatches.some((match) => match.stage !== "GROUP");
   const standings = league.members
     .map((member) => {
       const groupScore = league.scores.group.find((score) => score.userId === member.userId);
@@ -49,6 +50,7 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
       };
     })
     .sort((left, right) => right.totalPoints - left.totalPoints);
+  const overallLeader = standings[0];
   const groupChampion = league.scores.group[0];
   const knockoutChampion = league.scores.knockout[0];
 
@@ -95,12 +97,14 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
               {league.status.replace("_", " ")}
             </span>
             <div className="flex flex-wrap gap-3">
-              <Link
-                href={`/leagues/${league.id}/bracket`}
-                className="rounded-full border border-[var(--line-strong)] px-4 py-2 font-sans text-xs uppercase tracking-[0.18em] text-white"
-              >
-                Bracket
-              </Link>
+              {hasKnockoutFixtures ? (
+                <Link
+                  href={`/leagues/${league.id}/bracket`}
+                  className="rounded-full border border-[var(--line-strong)] px-4 py-2 font-sans text-xs uppercase tracking-[0.18em] text-white"
+                >
+                  Bracket
+                </Link>
+              ) : null}
               {canStartDraft ? (
                 <Link
                   href={`/leagues/${league.id}/admin`}
@@ -139,7 +143,15 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
             </div>
           </div>
 
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <div className="mt-4 grid gap-4 sm:grid-cols-3">
+            <div className="border-t border-white/10 py-3">
+              <p className="font-sans text-[0.68rem] uppercase tracking-[0.18em] text-[var(--muted)]">
+                Overall Leader
+              </p>
+              <p className="mt-2 text-lg text-white">
+                {overallLeader?.displayName || "TBD"}
+              </p>
+            </div>
             <div className="border-t border-white/10 py-3">
               <p className="font-sans text-[0.68rem] uppercase tracking-[0.18em] text-[var(--muted)]">
                 Group Stage Champion
@@ -157,6 +169,12 @@ export default async function LeaguePage({ params, searchParams }: LeaguePagePro
               </p>
             </div>
           </div>
+
+          {!hasKnockoutFixtures ? (
+            <p className="mt-4 text-sm leading-7 text-[var(--muted)]">
+              Bracket picks open once knockout fixtures are synced.
+            </p>
+          ) : null}
 
           <div className="mt-5 overflow-hidden border-t border-white/10">
             <table className="min-w-full border-collapse text-left text-sm">

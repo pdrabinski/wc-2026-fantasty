@@ -131,6 +131,12 @@ export type CurrentAppUser = {
   email: string;
 };
 
+type AppUserIdentity = {
+  clerkUserId: string;
+  displayName: string;
+  email: string;
+};
+
 export type PersistenceState = {
   available: boolean;
   reason?: string;
@@ -197,11 +203,23 @@ export async function syncCurrentUser() {
     return null;
   }
 
+  return syncAppUserIdentity({
+    clerkUserId: clerkUser.id,
+    displayName: getDisplayName(clerkUser),
+    email: getEmail(clerkUser),
+  });
+}
+
+export async function syncAppUserIdentity(identity: AppUserIdentity) {
+  if (!hasSupabaseEnv) {
+    return null;
+  }
+
   const supabase = getSupabaseServerClient();
   const payload = {
-    clerk_user_id: clerkUser.id,
-    display_name: getDisplayName(clerkUser),
-    email: getEmail(clerkUser),
+    clerk_user_id: identity.clerkUserId,
+    display_name: identity.displayName,
+    email: identity.email,
   };
 
   const { data, error } = await supabase
