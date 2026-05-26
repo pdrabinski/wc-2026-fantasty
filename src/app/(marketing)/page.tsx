@@ -1,4 +1,5 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
+import { headers } from "next/headers";
 import Link from "next/link";
 import { SignInButton, SignUpButton } from "@clerk/nextjs";
 
@@ -7,10 +8,23 @@ import { getDashboardLeagues, getPersistenceState, syncCurrentUser } from "@/lib
 
 const hasClerkEnv = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
+async function getSiteOrigin() {
+  const headerStore = await headers();
+  const host = headerStore.get("x-forwarded-host") ?? headerStore.get("host");
+  const protocol = headerStore.get("x-forwarded-proto") ?? "https";
+
+  if (!host) {
+    return "https://wc-2026-fantasty.vercel.app";
+  }
+
+  return `${protocol}://${host}`;
+}
+
 export default async function MarketingHome() {
   const { userId } = await auth();
   const clerkUser = userId ? await currentUser() : null;
   const featuredTeams = seedTeams.slice(0, 6);
+  const siteOrigin = await getSiteOrigin();
   const signedIn = Boolean(userId);
   const displayName =
     clerkUser?.firstName ||
@@ -124,19 +138,37 @@ export default async function MarketingHome() {
             </div>
           </section>
         ) : (
-          <section className="mt-14 border-t border-[var(--line)] pt-6">
-            <div className="flex flex-wrap gap-2">
-              {featuredTeams.map((team) => (
-                <span
-                  key={team.id}
-                  className="rounded-full border border-white/10 px-3 py-2 font-sans text-xs uppercase tracking-[0.16em] text-white"
-                >
-                  {getFlagEmojiFromCode(team.countryCode)} {team.name}
-                </span>
-              ))}
-            </div>
-          </section>
+          <>
+            <section className="mt-14 border-t border-[var(--line)] pt-6">
+              <div className="flex flex-wrap gap-2">
+                {featuredTeams.map((team) => (
+                  <span
+                    key={team.id}
+                    className="rounded-full border border-white/10 px-3 py-2 font-sans text-xs uppercase tracking-[0.16em] text-white"
+                  >
+                    {getFlagEmojiFromCode(team.countryCode)} {team.name}
+                  </span>
+                ))}
+              </div>
+            </section>
+          </>
         )}
+
+        <section className="mt-14 border-t border-[var(--line)] pt-6">
+          <p className="font-sans text-xs uppercase tracking-[0.18em] text-[var(--gold)]">
+            Use with Codex
+          </p>
+          <div className="mt-4 max-w-3xl space-y-3 text-sm leading-7 text-[var(--muted)]">
+            <p>
+              Codex users can connect WC Fantasy League directly and check standings, fixtures,
+              rosters, and bracket picks with OAuth.
+            </p>
+            <code className="block overflow-x-auto rounded-2xl border border-white/10 bg-black/20 px-4 py-3 font-mono text-xs text-white">
+              codex mcp add wcFantasy --url {siteOrigin}/api/mcp
+            </code>
+            <p>After that, Codex will prompt for Clerk sign-in and discover the league tools automatically.</p>
+          </div>
+        </section>
       </section>
     </main>
   );
